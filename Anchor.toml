@@ -6,19 +6,19 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-cipher_nft_staking = "2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f"
+cipher_nft_staking = "7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV"
 
 [programs.devnet]
-cipher_nft_staking = "2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f"
+cipher_nft_staking = "7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV"
 
 [programs.mainnet]
-cipher_nft_staking = "2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f"
+cipher_nft_staking = "7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
+cluster = "mainnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]

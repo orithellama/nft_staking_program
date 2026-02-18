@@ -83,7 +83,7 @@ pub fn handler(
         enabled,
     });
 
-    msg!("✅ Collection {} {}", collection, if is_new { "added" } else { "updated" });
+    msg!("Collection {} {}", collection, if is_new { "added" } else { "updated" });
     msg!("   Enabled: {}", enabled);
     msg!("   Lock range: {} - {} seconds", min_lock_duration, max_lock_duration);
 

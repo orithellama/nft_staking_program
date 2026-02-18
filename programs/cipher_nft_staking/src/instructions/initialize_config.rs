@@ -6,12 +6,11 @@ use crate::events::*;
 ///
 /// **Security:**
 /// - Can only be called once (account init prevents re-initialization)
-/// - Authority should be set to a multisig for production
+/// - Authority is set to Cipherlabs Squads v4 multisig
 /// - Starts in unpaused state
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {
     /// The authority that will control the config
-    /// **Recommendation:** Use a multisig wallet
     #[account(mut)]
     pub authority: Signer<'info>,
 
@@ -52,7 +51,7 @@ pub fn handler(ctx: Context<InitializeConfig>, protocol_fee_bps: u16) -> Result<
         updated_at: Clock::get()?.unix_timestamp,
     });
 
-    msg!("✅ Global config initialized by {}", config.authority);
+    msg!("Global config initialized by {}", config.authority);
     msg!("   Protocol fee: {} bps ({}%)", protocol_fee_bps, protocol_fee_bps as f64 / 100.0);
 
     Ok(())

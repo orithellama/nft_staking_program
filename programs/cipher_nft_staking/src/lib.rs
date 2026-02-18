@@ -7,7 +7,7 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f");
+declare_id!("7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV");
 
 /// # Cipher NFT Staking Program
 ///

@@ -107,10 +107,8 @@ pub struct StakeNft<'info> {
 }
 
 pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Option<Pubkey>) -> Result<()> {
-    // ========================================
-    // STEP 0: EXPLICIT CHECKS (MAXIMUM SECURITY)
-    // ========================================
-
+    
+    // EXPLICIT CHECKS
     // SECURITY: Prevent double-stake attempts with clear error
     // While init would fail anyway, this provides explicit error message
     require!(
@@ -134,9 +132,9 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         StakingError::InvalidTokenAccount
     );
 
-    // ========================================
+    
     // STEP 1: VALIDATE METADATA & COLLECTION
-    // ========================================
+    
 
     let metadata_data = &ctx.accounts.nft_metadata.try_borrow_data()?;
     let metadata = Metadata::safe_deserialize(metadata_data)
@@ -165,9 +163,9 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         StakingError::CollectionNotWhitelisted
     );
 
-    // ========================================
+    
     // STEP 2: VALIDATE LOCK DURATION
-    // ========================================
+    
 
     let collection_config = &ctx.accounts.collection_config;
 
@@ -177,9 +175,9 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         StakingError::InvalidLockDuration
     );
 
-    // ========================================
+    
     // STEP 3: TRANSFER NFT TO ESCROW
-    // ========================================
+    
 
     let transfer_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
@@ -192,9 +190,9 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
 
     token::transfer(transfer_ctx, 1)?;
 
-    // ========================================
+    
     // STEP 4: INITIALIZE STAKE ACCOUNT
-    // ========================================
+    
 
     let clock = Clock::get()?;
     let stake_account_key = ctx.accounts.stake_account.key();
@@ -216,9 +214,9 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
     stake_account.associated_pool = associated_pool.unwrap_or(Pubkey::default());
     stake_account._padding = [0; 128];
 
-    // ========================================
+    
     // STEP 5: UPDATE STATS
-    // ========================================
+    
 
     let collection_config = &mut ctx.accounts.collection_config;
     collection_config.total_staked = collection_config
@@ -236,9 +234,9 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         .checked_add(1)
         .ok_or(StakingError::ArithmeticOverflow)?;
 
-    // ========================================
+    
     // STEP 6: EMIT EVENT
-    // ========================================
+    
 
     emit!(NftStaked {
         staker: stake_account.owner,

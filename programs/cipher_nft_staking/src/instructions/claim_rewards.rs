@@ -36,22 +36,14 @@ pub struct ClaimRewards<'info> {
 }
 
 pub fn handler(ctx: Context<ClaimRewards>, amount: u64) -> Result<()> {
-    // ========================================
-    // STEP 1: VERIFY OWNER
-    // ========================================
-
+    
+    // VERIFY OWNER
     ctx.accounts.stake_account.verify_owner(&ctx.accounts.owner.key())?;
 
-    // ========================================
-    // STEP 2: VALIDATE CLAIM
-    // ========================================
-
+    // VALIDATE CLAIM
     require!(amount > 0, StakingError::NoRewards);
 
-    // ========================================
-    // STEP 3: UPDATE STAKE ACCOUNT
-    // ========================================
-
+    // UPDATE STAKE ACCOUNT
     let clock = Clock::get()?;
     let stake_account = &mut ctx.accounts.stake_account;
 
@@ -62,10 +54,8 @@ pub fn handler(ctx: Context<ClaimRewards>, amount: u64) -> Result<()> {
 
     stake_account.last_claim_at = clock.unix_timestamp;
 
-    // ========================================
-    // STEP 4: EMIT EVENT
-    // ========================================
-
+    
+    // EMIT EVENT
     emit!(RewardsClaimed {
         staker: stake_account.owner,
         nft_mint: stake_account.nft_mint,
@@ -73,11 +63,10 @@ pub fn handler(ctx: Context<ClaimRewards>, amount: u64) -> Result<()> {
         claimed_at: clock.unix_timestamp,
     });
 
-    msg!("✅ Rewards claimed!");
+    msg!("Rewards claimed!");
     msg!("   Amount: {}", amount);
     msg!("   Total claimed: {}", stake_account.rewards_claimed);
 
-    // NOTE: Actual token transfer would happen in your adapter
     // after this instruction succeeds, reading the event.
 
     Ok(())
