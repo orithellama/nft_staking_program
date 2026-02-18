@@ -7,29 +7,29 @@ pub mod state;
 
 use instructions::*;
 
-declare_id!("CiPherNFTStake11111111111111111111111111111");
+declare_id!("2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f");
 
 /// # Cipher NFT Staking Program
 ///
 /// Simple, secure NFT staking program for the Cipher/Orbit Finance ecosystem.
 ///
 /// ## Features
-/// - ✅ NFT escrow via PDA (cannot be moved during lock)
-/// - ✅ Configurable lock periods per collection
-/// - ✅ Binary lock/unlock system (no complex multipliers)
-/// - ✅ Emergency pause functionality
-/// - ✅ No admin backdoors (authority cannot steal NFTs)
-/// - ✅ Full event emission for off-chain indexing
+/// - NFT escrow via PDA (cannot be moved during lock)
+/// - Configurable lock periods per collection
+/// - Binary lock/unlock system (no complex multipliers)
+/// - Emergency pause functionality
+/// - No admin backdoors (authority cannot steal NFTs)
+/// - Full event emission for off-chain indexing
 ///
-/// ## Integration with DLMM
+/// ## Integration with Orbit Finance DLMM
 ///
-/// This program tracks NFT staking positions which your DLMM program
+/// This program tracks NFT staking positions which Orbit Finance DLMM
 /// uses to determine fee claim eligibility:
 ///
-/// 1. User stakes NFT here → NFT locked in escrow
-/// 2. User trades on DLMM pools → earns trading fees
-/// 3. DLMM reads stake_account: is_active && !is_unlocked()
-/// 4. If true → user is eligible to claim fees
+/// 1. User stakes NFT here -> NFT locked in escrow
+/// 2. User trades on Orbit Finance DLMM pools -> earns trading fees
+/// 3. Orbit Finance DLMM reads stake_account: is_active && !is_unlocked()
+/// 4. If true -> user is eligible to claim fees
 ///
 /// ## Security Model
 ///
@@ -44,10 +44,10 @@ declare_id!("CiPherNFTStake11111111111111111111111111111");
 /// ```text
 /// 1. Admin: initialize_config()
 /// 2. Admin: add_collection() for each allowed NFT collection
-/// 3. User:  stake_nft() → NFT locked, stake_account created
+/// 3. User:  stake_nft() -> NFT locked, stake_account created
 /// 4. User:  [waits for lock period]
-/// 5. User:  claim_rewards() → optional, tracks rewards claimed
-/// 6. User:  unstake_nft() → NFT returned, stake_account closed
+/// 5. User:  claim_rewards() -> optional, tracks rewards claimed
+/// 6. User:  unstake_nft() -> NFT returned, stake_account closed
 /// ```
 #[program]
 pub mod cipher_nft_staking {

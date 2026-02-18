@@ -6,13 +6,13 @@ resolution = true
 skip-lint = false
 
 [programs.localnet]
-cipher_nft_staking = "CiPherNFTStake11111111111111111111111111111"
+cipher_nft_staking = "2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f"
 
 [programs.devnet]
-cipher_nft_staking = "CiPherNFTStake11111111111111111111111111111"
+cipher_nft_staking = "2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f"
 
 [programs.mainnet]
-cipher_nft_staking = "CiPherNFTStake11111111111111111111111111111"
+cipher_nft_staking = "2qUYFufdaRp6KgGNJg8iqK8ArYscD3LhjDoPwnf5Vq8f"
 
 [registry]
 url = "https://api.apr.dev"

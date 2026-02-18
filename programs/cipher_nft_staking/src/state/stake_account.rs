@@ -13,9 +13,9 @@ use anchor_lang::prelude::*;
 /// - Cannot be moved until unlock_at timestamp passes
 /// - Owner verification required for all operations
 ///
-/// **DLMM Integration:**
-/// Your DLMM program reads this account to check: is_active && !is_unlocked(now)
-/// If true → user is eligible for fee claims
+/// **Orbit Finance DLMM Integration:**
+/// Orbit Finance DLMM reads this account to check: is_active && !is_unlocked(now)
+/// If true -> user is eligible for fee claims
 #[account]
 #[derive(Debug)]
 pub struct StakeAccount {

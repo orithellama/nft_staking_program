@@ -18,8 +18,8 @@ use crate::error::*;
 /// 5. Create stake account
 /// 6. Update stats
 ///
-/// **Integration with DLMM:**
-/// Your DLMM program reads the StakeAccount to check if a user has an active
+/// **Integration with Orbit Finance DLMM:**
+/// Orbit Finance DLMM reads the StakeAccount to check if a user has an active
 /// stake and is eligible for fee claims.
 #[derive(Accounts)]
 #[instruction(lock_duration: i64)]

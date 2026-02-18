@@ -6,8 +6,8 @@ use anchor_lang::prelude::*;
 /// - Allowed lock durations
 /// - Whether staking is enabled
 ///
-/// **Integration with DLMM:** Your DLMM program checks if a user has an active
-/// stake by reading the StakeAccount. If staked → eligible for fee claims.
+/// **Integration with Orbit Finance DLMM:** Orbit Finance DLMM checks if a user has an active
+/// stake by reading the StakeAccount. If staked -> eligible for fee claims.
 #[account]
 #[derive(Debug)]
 pub struct CollectionConfig {
