@@ -11,7 +11,7 @@ This program enables users to stake their NFTs by locking them in escrow PDAs fo
 ## Program ID
 
 ```
-CiPherNFTStake11111111111111111111111111111
+7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV
 ```
 
 ## Features
