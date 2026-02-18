@@ -1,0 +1,3 @@
+[target.aarch64-apple-darwin]
+linker = "/usr/bin/clang"
+rustflags = ["-C", "link-arg=-Wl,-syslibroot,/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk"]

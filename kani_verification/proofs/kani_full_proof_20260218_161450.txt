@@ -1,0 +1,393 @@
+Kani Rust Verifier 0.67.0 (cargo plugin)
+    Finished `dev` profile [optimized + debuginfo] target(s) in 0.29s
+Checking harness stake_proofs::prove_lock_duration_validation...
+CBMC 6.8.0 (cbmc-6.8.0)
+CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
+Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs30prove_lock_duration_validation.out
+Generating GOTO Program
+Adding CPROVER library (arm64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 16 object bits, 48 offset bits (user-specified)
+Starting Bounded Model Checking
+Runtime Symex: 0.00346433s
+size of program expression: 340 steps
+slicing removed 151 assignments
+Generated 6 VCC(s), 6 remaining after simplification
+Runtime Postprocess Equation: 3.8625e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.000442792s
+Running propositional reduction
+Post-processing
+Runtime Post-process: 5.375e-06s
+Solving with CaDiCaL 2.0.0
+544 variables, 1112 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.0001005s
+Runtime decision procedure: 0.000580167s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+545 variables, 1113 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 3.4125e-05s
+Runtime decision procedure: 4.975e-05s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+546 variables, 1114 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 3.4291e-05s
+Runtime decision procedure: 4.8875e-05s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+547 variables, 1115 clauses
+SAT checker: instance is UNSATISFIABLE
+Runtime Solver: 1.8625e-05s
+Runtime decision procedure: 2.9458e-05s
+
+RESULTS:
+Check 1: stake_proofs::prove_lock_duration_validation.assertion.1
+	 - Status: SUCCESS
+	 - Description: ""Should be invalid when below min""
+	 - Location: src/stake_proofs.rs:142:9 in function stake_proofs::prove_lock_duration_validation
+
+Check 2: stake_proofs::prove_lock_duration_validation.assertion.2
+	 - Status: SUCCESS
+	 - Description: ""Should be invalid when above max""
+	 - Location: src/stake_proofs.rs:144:9 in function stake_proofs::prove_lock_duration_validation
+
+Check 3: stake_proofs::prove_lock_duration_validation.assertion.3
+	 - Status: SUCCESS
+	 - Description: ""Should be valid when within range""
+	 - Location: src/stake_proofs.rs:146:9 in function stake_proofs::prove_lock_duration_validation
+
+
+SUMMARY:
+ ** 0 of 3 failed
+
+VERIFICATION:- SUCCESSFUL
+Verification Time: 0.015610375s
+
+Checking harness stake_proofs::prove_time_until_unlock_correct...
+CBMC 6.8.0 (cbmc-6.8.0)
+CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
+Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs31prove_time_until_unlock_correct.out
+Generating GOTO Program
+Adding CPROVER library (arm64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 16 object bits, 48 offset bits (user-specified)
+Starting Bounded Model Checking
+Runtime Symex: 0.00393242s
+size of program expression: 353 steps
+slicing removed 167 assignments
+Generated 10 VCC(s), 9 remaining after simplification
+Runtime Postprocess Equation: 4.4209e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.000632625s
+Running propositional reduction
+Post-processing
+Runtime Post-process: 4.708e-06s
+Solving with CaDiCaL 2.0.0
+803 variables, 2396 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.000250209s
+Runtime decision procedure: 0.000926125s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+804 variables, 2397 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.000515875s
+Runtime decision procedure: 0.000533334s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+805 variables, 2398 clauses
+SAT checker: instance is UNSATISFIABLE
+Runtime Solver: 0.00277987s
+Runtime decision procedure: 0.00279933s
+
+RESULTS:
+Check 1: stake_proofs::prove_time_until_unlock_correct.assertion.1
+	 - Status: SUCCESS
+	 - Description: ""No time remaining when unlocked""
+	 - Location: src/stake_proofs.rs:116:9 in function stake_proofs::prove_time_until_unlock_correct
+
+Check 2: stake_proofs::prove_time_until_unlock_correct.assertion.2
+	 - Status: SUCCESS
+	 - Description: "attempt to subtract with overflow"
+	 - Location: src/stake_proofs.rs:111:9 in function stake_proofs::prove_time_until_unlock_correct
+
+Check 3: stake_proofs::prove_time_until_unlock_correct.assertion.3
+	 - Status: SUCCESS
+	 - Description: ""Time remaining when still locked""
+	 - Location: src/stake_proofs.rs:118:9 in function stake_proofs::prove_time_until_unlock_correct
+
+Check 4: stake_proofs::prove_time_until_unlock_correct.assertion.4
+	 - Status: SUCCESS
+	 - Description: "attempt to subtract with overflow"
+	 - Location: src/stake_proofs.rs:119:35 in function stake_proofs::prove_time_until_unlock_correct
+
+Check 5: stake_proofs::prove_time_until_unlock_correct.assertion.5
+	 - Status: SUCCESS
+	 - Description: ""Time remaining must be correct""
+	 - Location: src/stake_proofs.rs:119:9 in function stake_proofs::prove_time_until_unlock_correct
+
+
+SUMMARY:
+ ** 0 of 5 failed
+
+VERIFICATION:- SUCCESSFUL
+Verification Time: 0.020682666s
+
+Checking harness stake_proofs::prove_stats_tracking_safe...
+CBMC 6.8.0 (cbmc-6.8.0)
+CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
+Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs25prove_stats_tracking_safe.out
+Generating GOTO Program
+Adding CPROVER library (arm64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 16 object bits, 48 offset bits (user-specified)
+Starting Bounded Model Checking
+aborting path on assume(false) at file src/stake_proofs.rs line 80 column 1 function stake_proofs::prove_stats_tracking_safe thread 0
+Runtime Symex: 0.00424454s
+size of program expression: 305 steps
+slicing removed 152 assignments
+Generated 8 VCC(s), 8 remaining after simplification
+Runtime Postprocess Equation: 4.5625e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.000609875s
+Running propositional reduction
+Post-processing
+Runtime Post-process: 5.334e-06s
+Solving with CaDiCaL 2.0.0
+675 variables, 1931 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.000889459s
+Runtime decision procedure: 0.00154487s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+676 variables, 1932 clauses
+SAT checker: instance is UNSATISFIABLE
+Runtime Solver: 0.00284133s
+Runtime decision procedure: 0.00286042s
+
+RESULTS:
+Check 1: core::num::<impl u64>::checked_add.arithmetic_overflow.1
+	 - Status: SUCCESS
+	 - Description: "attempt to compute `unchecked_add` which would overflow"
+	 - Location: ../../../../runner/.rustup/toolchains/nightly-2025-11-21-aarch64-apple-darwin/lib/rustlib/src/rust/library/core/src/num/uint_macros.rs:658:31 in function core::num::<impl u64>::checked_add
+
+Check 2: stake_proofs::prove_stats_tracking_safe.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/stake_proofs.rs:80:1 in function stake_proofs::prove_stats_tracking_safe
+
+Check 3: stake_proofs::prove_stats_tracking_safe.assertion.1
+	 - Status: SUCCESS
+	 - Description: "attempt to add with overflow"
+	 - Location: src/stake_proofs.rs:88:30 in function stake_proofs::prove_stats_tracking_safe
+
+Check 4: stake_proofs::prove_stats_tracking_safe.assertion.2
+	 - Status: SUCCESS
+	 - Description: ""New total must be old total + 1""
+	 - Location: src/stake_proofs.rs:88:9 in function stake_proofs::prove_stats_tracking_safe
+
+Check 5: stake_proofs::prove_stats_tracking_safe.assertion.3
+	 - Status: SUCCESS
+	 - Description: ""New total must be greater""
+	 - Location: src/stake_proofs.rs:89:9 in function stake_proofs::prove_stats_tracking_safe
+
+
+SUMMARY:
+ ** 0 of 5 failed
+
+VERIFICATION:- SUCCESSFUL
+Verification Time: 0.020217668s
+
+Checking harness stake_proofs::prove_owner_verification...
+CBMC 6.8.0 (cbmc-6.8.0)
+CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
+Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs24prove_owner_verification.out
+Generating GOTO Program
+Adding CPROVER library (arm64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 16 object bits, 48 offset bits (user-specified)
+Starting Bounded Model Checking
+Runtime Symex: 0.00286917s
+size of program expression: 254 steps
+slicing removed 116 assignments
+Generated 4 VCC(s), 3 remaining after simplification
+Runtime Postprocess Equation: 3.0208e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.000228458s
+Running propositional reduction
+Post-processing
+Runtime Post-process: 5.083e-06s
+Solving with CaDiCaL 2.0.0
+200 variables, 338 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 4.3125e-05s
+Runtime decision procedure: 0.000301708s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+201 variables, 339 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 2.1375e-05s
+Runtime decision procedure: 3.3875e-05s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+202 variables, 340 clauses
+SAT checker: instance is UNSATISFIABLE
+Runtime Solver: 1.2458e-05s
+Runtime decision procedure: 2.0875e-05s
+
+RESULTS:
+Check 1: stake_proofs::prove_owner_verification.assertion.1
+	 - Status: SUCCESS
+	 - Description: ""Verification should pass when keys match""
+	 - Location: src/stake_proofs.rs:70:9 in function stake_proofs::prove_owner_verification
+
+Check 2: stake_proofs::prove_owner_verification.assertion.2
+	 - Status: SUCCESS
+	 - Description: ""Verification should fail when keys don't match""
+	 - Location: src/stake_proofs.rs:72:9 in function stake_proofs::prove_owner_verification
+
+
+SUMMARY:
+ ** 0 of 2 failed
+
+VERIFICATION:- SUCCESSFUL
+Verification Time: 0.010211292s
+
+Checking harness stake_proofs::prove_arithmetic_safety...
+CBMC 6.8.0 (cbmc-6.8.0)
+CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
+Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs23prove_arithmetic_safety.out
+Generating GOTO Program
+Adding CPROVER library (arm64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 16 object bits, 48 offset bits (user-specified)
+Starting Bounded Model Checking
+aborting path on assume(false) at file src/stake_proofs.rs line 38 column 1 function stake_proofs::prove_arithmetic_safety thread 0
+Runtime Symex: 0.00554925s
+size of program expression: 375 steps
+slicing removed 172 assignments
+Generated 7 VCC(s), 7 remaining after simplification
+Runtime Postprocess Equation: 5.5875e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.00094325s
+Running propositional reduction
+Post-processing
+Runtime Post-process: 5.125e-06s
+Solving with CaDiCaL 2.0.0
+1337 variables, 4290 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.000826917s
+Runtime decision procedure: 0.00181488s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+1338 variables, 4291 clauses
+SAT checker: instance is UNSATISFIABLE
+Runtime Solver: 0.0117331s
+Runtime decision procedure: 0.0117539s
+
+RESULTS:
+Check 1: stake_proofs::prove_arithmetic_safety.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/stake_proofs.rs:38:1 in function stake_proofs::prove_arithmetic_safety
+
+Check 2: stake_proofs::prove_arithmetic_safety.assertion.1
+	 - Status: SUCCESS
+	 - Description: ""Unlock time must be after staked time""
+	 - Location: src/stake_proofs.rs:51:9 in function stake_proofs::prove_arithmetic_safety
+
+Check 3: stake_proofs::prove_arithmetic_safety.assertion.2
+	 - Status: SUCCESS
+	 - Description: "attempt to subtract with overflow"
+	 - Location: src/stake_proofs.rs:52:17 in function stake_proofs::prove_arithmetic_safety
+
+Check 4: stake_proofs::prove_arithmetic_safety.assertion.3
+	 - Status: SUCCESS
+	 - Description: ""Duration must be preserved""
+	 - Location: src/stake_proofs.rs:52:9 in function stake_proofs::prove_arithmetic_safety
+
+
+SUMMARY:
+ ** 0 of 4 failed
+
+VERIFICATION:- SUCCESSFUL
+Verification Time: 0.032594915s
+
+Checking harness stake_proofs::prove_lock_enforcement...
+CBMC 6.8.0 (cbmc-6.8.0)
+CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
+Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs22prove_lock_enforcement.out
+Generating GOTO Program
+Adding CPROVER library (arm64)
+Removal of function pointers and virtual functions
+Generic Property Instrumentation
+Running with 16 object bits, 48 offset bits (user-specified)
+Starting Bounded Model Checking
+aborting path on assume(false) at file src/stake_proofs.rs line 9 column 1 function stake_proofs::prove_lock_enforcement thread 0
+Runtime Symex: 0.00578092s
+size of program expression: 425 steps
+slicing removed 191 assignments
+Generated 5 VCC(s), 4 remaining after simplification
+Runtime Postprocess Equation: 6.6459e-05s
+Passing problem to propositional reduction
+converting SSA
+Runtime Convert SSA: 0.000771791s
+Running propositional reduction
+Post-processing
+Runtime Post-process: 5.292e-06s
+Solving with CaDiCaL 2.0.0
+1139 variables, 2808 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 0.000109792s
+Runtime decision procedure: 0.000919s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+1140 variables, 2809 clauses
+SAT checker: instance is SATISFIABLE
+Runtime Solver: 6.7917e-05s
+Runtime decision procedure: 8.4584e-05s
+Running propositional reduction
+Solving with CaDiCaL 2.0.0
+1141 variables, 2810 clauses
+SAT checker: instance is UNSATISFIABLE
+Runtime Solver: 1.3167e-05s
+Runtime decision procedure: 2.2083e-05s
+
+RESULTS:
+Check 1: stake_proofs::prove_lock_enforcement.unreachable.1
+	 - Status: SUCCESS
+	 - Description: "unreachable code"
+	 - Location: src/stake_proofs.rs:9:1 in function stake_proofs::prove_lock_enforcement
+
+Check 2: stake_proofs::prove_lock_enforcement.assertion.1
+	 - Status: SUCCESS
+	 - Description: ""Should be unlocked when current >= unlock_at""
+	 - Location: src/stake_proofs.rs:26:13 in function stake_proofs::prove_lock_enforcement
+
+Check 3: stake_proofs::prove_lock_enforcement.assertion.2
+	 - Status: SUCCESS
+	 - Description: ""Should be locked when current < unlock_at""
+	 - Location: src/stake_proofs.rs:28:13 in function stake_proofs::prove_lock_enforcement
+
+
+SUMMARY:
+ ** 0 of 3 failed
+
+VERIFICATION:- SUCCESSFUL
+Verification Time: 0.022905417s
+
+Manual Harness Summary:
+Complete - 6 successfully verified harnesses, 0 failures, 6 total.

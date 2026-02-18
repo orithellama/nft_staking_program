@@ -1,0 +1,27 @@
+[package]
+name = "cipher_nft_staking"
+version = "0.1.0"
+description = "Secure NFT staking program for Cipher/Orbit Finance ecosystem"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "cipher_nft_staking"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+default = []
+
+[lints.rust]
+unexpected_cfgs = "allow"
+ambiguous_glob_reexports = "allow"
+deprecated = "allow"
+
+[dependencies]
+anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
+anchor-spl = "0.31.1"
+mpl-token-metadata = { version = "5.1.1", features = ["serde"] }

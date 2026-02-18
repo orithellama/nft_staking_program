@@ -1,0 +1,35 @@
+# Anchor
+.anchor/
+target/
+test-ledger/
+
+# Rust
+Cargo.lock
+**/*.rs.bk
+
+# IDL
+*.so
+*.json
+
+# Node
+node_modules/
+package-lock.json
+yarn.lock
+
+# OS
+.DS_Store
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Build artifacts
+deploy/
+dist/

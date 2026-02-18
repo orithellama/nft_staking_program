@@ -1,0 +1,165 @@
+# Security Policy
+
+## Program Overview
+
+The Cipher NFT Staking Program is a security-critical smart contract that holds user NFTs in escrow. This document outlines the security model, known considerations, and responsible disclosure procedures.
+
+## Audit Status
+
+**Current Status:** Not yet audited
+**Deployment Status:** Deployed to mainnet
+
+## Security Architecture
+
+### Trust Model
+
+**What the authority CAN do:**
+- Add or remove collections from whitelist
+- Pause staking operations (does not affect existing stakes)
+- Update global configuration parameters
+- Transfer authority to another address
+
+**What the authority CANNOT do:**
+- Access or withdraw user NFTs from escrow
+- Modify lock periods of existing stakes
+- Close or modify user stake accounts
+- Force unstake NFTs before unlock time
+- Access escrow authority PDAs (no private key exists)
+
+### Key Security Features
+
+1. **Per-User Escrow Authority**
+   - Each user has unique escrow authority PDA: ["escrow_authority", user_pubkey]
+   - Eliminates any collision scenarios between users
+   - No private key exists for escrow authorities
+   - Only the program can sign for escrow authorities using PDA derivation
+
+2. **NFT Lock Enforcement**
+   - NFTs physically transferred to escrow PDAs
+   - Cannot be moved until unlock_at timestamp passes
+   - Enforced by on-chain clock, not manipulable
+
+3. **Access Control**
+   - All operations verify proper ownership/authority
+   - Stake account PDA derivation includes both NFT mint and owner
+   - Double-stake prevention via explicit checks
+
+4. **Metadata Verification**
+   - Validates NFT belongs to claimed collection
+   - Checks collection is verified in metadata
+   - Prevents staking of fungible tokens or wrong NFTs
+
+5. **Checked Arithmetic**
+   - All math operations use checked_* functions
+   - Prevents overflow/underflow attacks
+   - Safe handling of timestamps and durations
+
+## Attack Scenarios Considered
+
+### Attempted: Steal NFT from Escrow
+**Status:** MITIGATED
+**How:** Escrow authority PDAs have no private keys. Only program can sign using seeds.
+**Result:** Attack impossible without program exploit.
+
+### Attempted: Double-Stake Same NFT
+**Status:** MITIGATED
+**How:** Explicit check verifies stake account doesn't exist (lamports == 0).
+**Result:** Second stake attempt fails with StakeAlreadyExists error.
+
+### Attempted: Unstake Before Lock Expires
+**Status:** MITIGATED
+**How:** Program verifies current_timestamp >= unlock_at before allowing unstake.
+**Result:** Transaction fails with StillLocked error.
+
+### Attempted: Stake Non-Whitelisted Collection
+**Status:** MITIGATED
+**How:** Program requires valid CollectionConfig account with enabled = true.
+**Result:** Transaction fails with CollectionNotWhitelisted error.
+
+### Attempted: Stake Fungible Token
+**Status:** MITIGATED
+**How:** Program validates TokenStandard is NonFungible or ProgrammableNonFungible.
+**Result:** Transaction fails with InvalidMetadata error.
+
+### Attempted: Integer Overflow in Lock Duration
+**Status:** MITIGATED
+**How:** All arithmetic uses checked_add/checked_sub with explicit error handling.
+**Result:** Transaction fails with ArithmeticOverflow error.
+
+### Attempted: Collide Escrow Authority PDAs
+**Status:** MITIGATED
+**How:** Per-user escrow authority includes user pubkey in seeds: ["escrow_authority", owner].
+**Result:** Each user has unique escrow authority, collision mathematically impossible.
+
+## Testing Coverage
+
+The program has been tested for:
+- Happy path: stake -> wait -> unstake
+- Lock enforcement: unstake before unlock fails
+- Access control: unauthorized operations fail
+- Collection validation: wrong collections rejected
+- Metadata verification: unverified collections rejected
+- Double-stake prevention: second stake of same NFT fails
+- Arithmetic safety: overflow conditions handled
+
+**Note:** Tests are located in the tests/ directory (if present). Additional testing recommended before mainnet deployment.
+
+## Responsible Disclosure
+
+If you discover a security vulnerability in this program:
+
+1. **DO NOT** disclose publicly
+2. **DO NOT** exploit the vulnerability
+3. **DO** contact the development team immediately
+
+**Contact:**
+- Email: security@cipherlabsx.com
+
+**Expected Response Time:**
+- Critical vulnerabilities: < 1 hours
+- High severity: < 12 hours
+- Medium/Low severity: < 48 hours
+
+**Disclosure Timeline:**
+- Report received -> Acknowledged within 24h
+- Fix developed -> 1-7 days depending on severity
+- Fix deployed -> Coordinated with reporter
+- Public disclosure -> After fix deployed + 30 days
+
+## Severity Classification
+
+**Critical:**
+- Theft of user NFTs from escrow
+- Unauthorized unstaking of locked NFTs
+- Program authority escalation
+
+**High:**
+- Bypass of lock period enforcement
+- Unauthorized modification of stake accounts
+- DOS attacks preventing unstaking
+
+**Medium:**
+- Event emission inconsistencies
+- Stats tracking errors
+- Excessive compute usage
+
+**Low:**
+- Informational issues
+- Code quality improvements
+- Documentation errors
+
+## Version History
+
+v0.1.0 - Initial implementation
+- Basic staking/unstaking functionality
+- Collection whitelisting
+- Per-user escrow authorities
+- Event emission
+
+## License
+
+See LICENSE file for program licensing terms.
+
+## Disclaimer
+
+THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND. USE AT YOUR OWN RISK. THE AUTHORS AND COPYRIGHT HOLDERS ARE NOT LIABLE FOR ANY DAMAGES ARISING FROM THE USE OF THIS SOFTWARE.
