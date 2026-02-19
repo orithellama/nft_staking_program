@@ -208,4 +208,34 @@ pub mod cipher_nft_staking {
     ) -> Result<()> {
         instructions::unstake_compressed_nft::handler(ctx, root, data_hash, creator_hash, nonce)
     }
+
+    /// Stake a Metaplex Core Asset NFT by freezing it
+    ///
+    /// # Arguments
+    /// * `lock_duration` - How long to lock in seconds
+    /// * `associated_pool` - Optional Orbit Finance DLMM pool address for targeted benefits
+    ///
+    /// # Security
+    /// - Verifies NFT ownership
+    /// - Validates collection is whitelisted
+    /// - Validates lock duration within bounds
+    /// - Freezes Core Asset (user cannot transfer it)
+    pub fn stake_core_asset(
+        ctx: Context<StakeCoreAsset>,
+        lock_duration: i64,
+        associated_pool: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::stake_core_asset::handler(ctx, lock_duration, associated_pool)
+    }
+
+    /// Unstake a Metaplex Core Asset NFT after lock period expires
+    ///
+    /// # Security
+    /// - Verifies lock period has passed
+    /// - Verifies owner matches
+    /// - Thaws Core Asset (removes freeze)
+    /// - Closes stake account (rent refund)
+    pub fn unstake_core_asset(ctx: Context<UnstakeCoreAsset>) -> Result<()> {
+        instructions::unstake_core_asset::handler(ctx)
+    }
 }
