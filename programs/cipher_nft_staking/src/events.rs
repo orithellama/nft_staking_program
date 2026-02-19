@@ -30,21 +30,6 @@ pub struct NftUnstaked {
     pub unstaked_at: i64,
     /// Total time staked in seconds
     pub total_staked_duration: i64,
-    /// Total rewards earned (if any)
-    pub rewards_earned: u64,
-}
-
-/// Emitted when rewards are claimed
-#[event]
-pub struct RewardsClaimed {
-    /// The public key of the staker
-    pub staker: Pubkey,
-    /// The mint address of the staked NFT
-    pub nft_mint: Pubkey,
-    /// Amount of rewards claimed
-    pub amount: u64,
-    /// Unix timestamp when claimed
-    pub claimed_at: i64,
 }
 
 /// Emitted when a collection is whitelisted

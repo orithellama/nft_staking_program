@@ -5,7 +5,7 @@ use anchor_lang::prelude::*;
 /// This account stores program-wide settings and is controlled by the authority.
 /// Only one instance exists per program.
 ///
-/// **Security:** Authority should be a multisig or governance program.
+/// **Security:** Authority set to Squads multisig.
 #[account]
 #[derive(Debug)]
 pub struct GlobalConfig {

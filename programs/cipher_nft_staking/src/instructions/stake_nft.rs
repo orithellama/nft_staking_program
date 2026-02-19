@@ -9,15 +9,6 @@ use crate::events::*;
 use crate::error::*;
 
 /// Stake an NFT by locking it in escrow
-///
-/// **Security Flow:**
-/// 1. Verify NFT ownership
-/// 2. Verify collection is whitelisted
-/// 3. Verify lock duration is within bounds
-/// 4. Transfer NFT to escrow PDA
-/// 5. Create stake account
-/// 6. Update stats
-///
 /// **Integration with Orbit Finance DLMM:**
 /// Orbit Finance DLMM reads the StakeAccount to check if a user has an active
 /// stake and is eligible for fee claims.
@@ -133,9 +124,7 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
     );
 
     
-    // STEP 1: VALIDATE METADATA & COLLECTION
-    
-
+    // VALIDATE METADATA & COLLECTION
     let metadata_data = &ctx.accounts.nft_metadata.try_borrow_data()?;
     let metadata = Metadata::safe_deserialize(metadata_data)
         .map_err(|_| StakingError::InvalidMetadata)?;
@@ -164,9 +153,7 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
     );
 
     
-    // STEP 2: VALIDATE LOCK DURATION
-    
-
+    // VALIDATE LOCK DURATION
     let collection_config = &ctx.accounts.collection_config;
 
     require!(
@@ -176,9 +163,7 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
     );
 
     
-    // STEP 3: TRANSFER NFT TO ESCROW
-    
-
+    // TRANSFER NFT TO ESCROW
     let transfer_ctx = CpiContext::new(
         ctx.accounts.token_program.to_account_info(),
         Transfer {
@@ -191,9 +176,7 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
     token::transfer(transfer_ctx, 1)?;
 
     
-    // STEP 4: INITIALIZE STAKE ACCOUNT
-    
-
+    // INITIALIZE STAKE ACCOUNT
     let clock = Clock::get()?;
     let stake_account_key = ctx.accounts.stake_account.key();
     let stake_account = &mut ctx.accounts.stake_account;
@@ -209,15 +192,13 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
     stake_account.bump = ctx.bumps.stake_account;
     stake_account.is_active = true;
     stake_account._reserved = [0; 6];
-    stake_account.rewards_claimed = 0;
-    stake_account.last_claim_at = clock.unix_timestamp;
     stake_account.associated_pool = associated_pool.unwrap_or(Pubkey::default());
-    stake_account._padding = [0; 128];
+    stake_account.nft_type = 0; // Traditional NFT
+    stake_account.leaf_index = 0; // Not used for traditional NFTs
+    stake_account._padding = [0; 135];
 
     
-    // STEP 5: UPDATE STATS
-    
-
+    // UPDATE STATS
     let collection_config = &mut ctx.accounts.collection_config;
     collection_config.total_staked = collection_config
         .total_staked
@@ -235,9 +216,7 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         .ok_or(StakingError::ArithmeticOverflow)?;
 
     
-    // STEP 6: EMIT EVENT
-    
-
+    // EMIT EVENT
     emit!(NftStaked {
         staker: stake_account.owner,
         nft_mint: stake_account.nft_mint,
@@ -248,7 +227,7 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         stake_account: stake_account_key,
     });
 
-    msg!("✅ NFT staked successfully!");
+    msg!("NFT staked successfully");
     msg!("   NFT Mint: {}", stake_account.nft_mint);
     msg!("   Owner: {}", stake_account.owner);
     msg!("   Lock Duration: {} days", lock_duration / 86400);

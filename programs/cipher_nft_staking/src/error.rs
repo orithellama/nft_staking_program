@@ -30,12 +30,6 @@ pub enum StakingError {
     #[msg("Arithmetic overflow")]
     ArithmeticOverflow,
 
-    #[msg("Rewards not yet claimable")]
-    RewardsNotClaimable,
-
-    #[msg("No rewards to claim")]
-    NoRewards,
-
     #[msg("Invalid reward multiplier")]
     InvalidMultiplier,
 
@@ -50,4 +44,20 @@ pub enum StakingError {
 
     #[msg("NFT metadata verification failed")]
     MetadataVerificationFailed,
+
+    // Compressed NFT errors
+    #[msg("Invalid NFT type (must be 0=Traditional or 1=Compressed)")]
+    InvalidNftType,
+
+    #[msg("Invalid merkle proof - compressed NFT ownership verification failed")]
+    InvalidMerkleProof,
+
+    #[msg("Compressed NFT verification failed")]
+    CompressedNftVerificationFailed,
+
+    #[msg("Delegate authority mismatch or delegation failed")]
+    InvalidDelegate,
+
+    #[msg("Merkle tree account is invalid or inaccessible")]
+    InvalidMerkleTree,
 }

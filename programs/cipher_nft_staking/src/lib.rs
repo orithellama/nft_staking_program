@@ -11,7 +11,7 @@ declare_id!("7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV");
 
 /// # Cipher NFT Staking Program
 ///
-/// Simple, secure NFT staking program for the Cipher/Orbit Finance ecosystem.
+/// Secure NFT staking program for the Cipher/Orbit Finance ecosystem.
 ///
 /// ## Features
 /// - NFT escrow via PDA (cannot be moved during lock)
@@ -46,8 +46,7 @@ declare_id!("7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV");
 /// 2. Admin: add_collection() for each allowed NFT collection
 /// 3. User:  stake_nft() -> NFT locked, stake_account created
 /// 4. User:  [waits for lock period]
-/// 5. User:  claim_rewards() -> optional, tracks rewards claimed
-/// 6. User:  unstake_nft() -> NFT returned, stake_account closed
+/// 5. User:  unstake_nft() -> NFT returned, stake_account closed
 /// ```
 #[program]
 pub mod cipher_nft_staking {
@@ -112,7 +111,7 @@ pub mod cipher_nft_staking {
     ///
     /// # Arguments
     /// * `lock_duration` - How long to lock in seconds
-    /// * `associated_pool` - Optional DLMM pool address for targeted benefits
+    /// * `associated_pool` - Optional Orbit Finance DLMM pool address for targeted benefits
     ///
     /// # Security
     /// - Verifies NFT ownership
@@ -138,15 +137,75 @@ pub mod cipher_nft_staking {
         instructions::unstake_nft::handler(ctx)
     }
 
-    /// Claim accumulated rewards
+    /// Stake a compressed NFT (cNFT) from a Bubblegum merkle tree
     ///
     /// # Arguments
-    /// * `amount` - Amount of rewards to mark as claimed
+    /// * `leaf_index` - Position of the NFT leaf in the merkle tree
+    /// * `lock_duration` - How long to lock in seconds
+    /// * `associated_pool` - Optional Orbit Finance DLMM pool address for targeted benefits
+    ///
+    /// # Security
+    /// - Verifies lock duration within bounds
+    /// - Sets program PDA as Bubblegum delegate (locks the cNFT)
+    /// - Creates stake account with nft_type=1 (compressed)
+    ///
+    /// Stake a compressed NFT by setting delegation
+    ///
+    /// # Arguments
+    /// * `root` - Merkle tree root hash
+    /// * `data_hash` - Hash of the NFT data
+    /// * `creator_hash` - Hash of the creator array
+    /// * `nonce` - Leaf nonce for validation
+    /// * `index` - Leaf index in the merkle tree
+    /// * `lock_duration` - Lock period in seconds
+    /// * `associated_pool` - Optional Orbit Finance DLMM pool address
     ///
     /// # Note
-    /// This is a tracking function. Actual token distribution
-    /// should be handled by your adapter after reading the event.
-    pub fn claim_rewards(ctx: Context<ClaimRewards>, amount: u64) -> Result<()> {
-        instructions::claim_rewards::handler(ctx, amount)
+    /// For compressed NFTs, the merkle_tree address is stored in nft_mint field.
+    /// Use merkle_tree (not nft_mint) to derive the stake account PDA.
+    /// All merkle proof parameters must be fetched from DAS API.
+    pub fn stake_compressed_nft(
+        ctx: Context<StakeCompressedNft>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+        index: u32,
+        lock_duration: i64,
+        associated_pool: Option<Pubkey>,
+    ) -> Result<()> {
+        instructions::stake_compressed_nft::handler(
+            ctx,
+            root,
+            data_hash,
+            creator_hash,
+            nonce,
+            index,
+            lock_duration,
+            associated_pool,
+        )
+    }
+
+    /// Unstake a compressed NFT after lock period expires
+    ///
+    /// # Arguments
+    /// * `root` - Merkle tree root hash
+    /// * `data_hash` - Hash of the NFT data
+    /// * `creator_hash` - Hash of the creator array
+    /// * `nonce` - Leaf nonce for validation
+    ///
+    /// # Security
+    /// - Verifies lock period has passed
+    /// - Verifies owner matches
+    /// - Removes Bubblegum delegate (unlocks the cNFT)
+    /// - Closes stake account (rent refund)
+    pub fn unstake_compressed_nft(
+        ctx: Context<UnstakeCompressedNft>,
+        root: [u8; 32],
+        data_hash: [u8; 32],
+        creator_hash: [u8; 32],
+        nonce: u64,
+    ) -> Result<()> {
+        instructions::unstake_compressed_nft::handler(ctx, root, data_hash, creator_hash, nonce)
     }
 }

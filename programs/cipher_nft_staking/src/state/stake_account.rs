@@ -23,6 +23,7 @@ pub struct StakeAccount {
     pub owner: Pubkey, // 32
 
     /// The NFT mint address (used for PDA derivation)
+    /// For compressed NFTs: stores the merkle tree address
     pub nft_mint: Pubkey, // 32
 
     /// The verified collection this NFT belongs to
@@ -46,24 +47,25 @@ pub struct StakeAccount {
     /// Reserved for alignment
     pub _reserved: [u8; 6], // 6
 
-    /// Total rewards claimed so far
-    pub rewards_claimed: u64, // 8
-
-    /// Last time rewards were claimed
-    pub last_claim_at: i64, // 8
-
-    /// Optional: Associated pool address from DLMM
+    /// Optional: Associated pool address from Orbit Finance DLMM
     /// If set, this stake provides benefits for that specific pool
     pub associated_pool: Pubkey, // 32
 
+    /// NFT type: 0 = Traditional, 1 = Compressed
+    pub nft_type: u8, // 1
+
+    /// For compressed NFTs: the leaf index in the merkle tree
+    /// For traditional NFTs: unused (0)
+    pub leaf_index: u64, // 8
+
     /// Reserved space for future fields
-    pub _padding: [u8; 128], // 128
+    pub _padding: [u8; 135], // 135 (119 + 16 from removed fields)
 }
 
 impl StakeAccount {
     /// Size calculation:
-    /// 8 (discriminator) + 32 + 32 + 32 + 8 + 8 + 8 + 1 + 1 + 6 + 8 + 8 + 32 + 128 = 312 bytes
-    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 1 + 1 + 6 + 8 + 8 + 32 + 128;
+    /// 8 (discriminator) + 32 + 32 + 32 + 8 + 8 + 8 + 1 + 1 + 6 + 32 + 1 + 8 + 135 = 312 bytes
+    pub const LEN: usize = 8 + 32 + 32 + 32 + 8 + 8 + 8 + 1 + 1 + 6 + 32 + 1 + 8 + 135;
 
     /// PDA seeds for stake account
     pub const SEED_PREFIX: &'static [u8] = b"stake";
@@ -85,8 +87,10 @@ impl StakeAccount {
     }
 
     /// Calculate total time staked (in seconds)
+    ///
+    /// **Safety:** Uses saturating_sub to handle edge cases gracefully
     pub fn total_time_staked(&self, current_timestamp: i64) -> i64 {
-        current_timestamp - self.staked_at
+        current_timestamp.saturating_sub(self.staked_at)
     }
 
     /// Verify that the signer owns this stake

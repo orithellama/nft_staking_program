@@ -77,26 +77,20 @@ pub struct UnstakeNft<'info> {
 }
 
 pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
-    // ========================================
-    // STEP 1: VERIFY OWNER
-    // ========================================
-
+    
+    // VERIFY OWNER
     ctx.accounts.stake_account.verify_owner(&ctx.accounts.owner.key())?;
 
-    // ========================================
-    // STEP 2: CHECK LOCK PERIOD
-    // ========================================
-
+    
+    // CHECK LOCK PERIOD
     let clock = Clock::get()?;
     require!(
         ctx.accounts.stake_account.is_unlocked(clock.unix_timestamp),
         StakingError::StillLocked
     );
 
-    // ========================================
-    // STEP 3: TRANSFER NFT BACK TO OWNER
-    // ========================================
-
+    
+    // TRANSFER NFT BACK TO OWNER
     let escrow_authority_bump = ctx.bumps.escrow_authority;
     let owner_key = ctx.accounts.owner.key();
     let escrow_authority_seeds: &[&[&[u8]]] = &[&[
@@ -117,10 +111,8 @@ pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
 
     token::transfer(transfer_ctx, 1)?;
 
-    // ========================================
-    // STEP 4: UPDATE STATS
-    // ========================================
-
+    
+    // UPDATE STATS
     let collection_config = &mut ctx.accounts.collection_config;
     collection_config.total_staked = collection_config
         .total_staked
@@ -133,10 +125,8 @@ pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
         .checked_sub(1)
         .ok_or(StakingError::ArithmeticOverflow)?;
 
-    // ========================================
-    // STEP 5: EMIT EVENT
-    // ========================================
-
+    
+    // EMIT EVENT
     let total_staked_duration = ctx.accounts.stake_account.total_time_staked(clock.unix_timestamp);
 
     emit!(NftUnstaked {
@@ -144,13 +134,11 @@ pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
         nft_mint: ctx.accounts.stake_account.nft_mint,
         unstaked_at: clock.unix_timestamp,
         total_staked_duration,
-        rewards_earned: ctx.accounts.stake_account.rewards_claimed,
     });
 
-    msg!("✅ NFT unstaked successfully!");
+    msg!("NFT unstaked successfully");
     msg!("   NFT Mint: {}", ctx.accounts.stake_account.nft_mint);
     msg!("   Total staked: {} days", total_staked_duration / 86400);
-    msg!("   Rewards earned: {}", ctx.accounts.stake_account.rewards_claimed);
 
     // Stake account automatically closed (rent refunded to owner)
     Ok(())

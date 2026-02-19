@@ -25,3 +25,7 @@ deprecated = "allow"
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = "0.31.1"
 mpl-token-metadata = { version = "5.1.1", features = ["serde"] }
+
+# Compressed NFT support
+# All dependencies cause version conflicts, so using raw instructions only
+# Anchor provides all necessary CPI primitives (invoke_signed, Instruction, AccountMeta)

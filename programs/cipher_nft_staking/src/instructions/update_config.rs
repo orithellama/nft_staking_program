@@ -31,14 +31,14 @@ pub fn handler(
 
     // Update authority (ownership transfer)
     if let Some(new_auth) = new_authority {
-        msg!("⚠️  Authority transfer: {} -> {}", config.authority, new_auth);
+        msg!("Authority transfer: {} -> {}", config.authority, new_auth);
         config.authority = new_auth;
     }
 
     // Update pause state
     if let Some(pause_state) = paused {
         config.paused = pause_state;
-        msg!("⚠️  Program {}", if pause_state { "PAUSED" } else { "UNPAUSED" });
+        msg!("Program {}", if pause_state { "PAUSED" } else { "UNPAUSED" });
     }
 
     // Update protocol fee
