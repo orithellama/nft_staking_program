@@ -1,59 +1,41 @@
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self, Token, TokenAccount, Transfer};
+use anchor_lang::solana_program::{
+    instruction::{AccountMeta, Instruction},
+    program::invoke_signed,
+};
 
 use crate::state::*;
 use crate::events::*;
 use crate::error::*;
 
-/// Unstake an NFT after lock period expires
-///
-/// **Security:**
-/// - Verifies lock period has expired
-/// - Verifies owner matches
-/// - Transfers NFT back to owner
-/// - Closes stake account (rent refund)
+/// Metaplex Core program ID
+const MPL_CORE_PROGRAM_ID: Pubkey = pubkey!("CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d");
+
+/// Unstake an NFT by thawing it
 #[derive(Accounts)]
 pub struct UnstakeNft<'info> {
     /// The NFT owner who is unstaking
     #[account(mut)]
     pub owner: Signer<'info>,
 
-    /// The NFT mint
-    /// CHECK: Validated via stake account
-    pub nft_mint: UncheckedAccount<'info>,
+    /// The Core Asset account (the NFT itself)
+    /// CHECK: Validated by mpl-core program
+    #[account(mut)]
+    pub asset: UncheckedAccount<'info>,
 
-    /// The owner's NFT token account (receives NFT back)
-    #[account(
-        mut,
-        constraint = owner_nft_account.mint == nft_mint.key(),
-        constraint = owner_nft_account.owner == owner.key()
-    )]
-    pub owner_nft_account: Account<'info, TokenAccount>,
-
-    /// The escrow account holding the NFT
-    #[account(
-        mut,
-        constraint = escrow_nft_account.mint == nft_mint.key(),
-        constraint = escrow_nft_account.amount == 1 @ StakingError::InvalidTokenAccount
-    )]
-    pub escrow_nft_account: Account<'info, TokenAccount>,
-
-    /// The escrow authority PDA (per-user, matches stake_nft)
-    /// CHECK: PDA, used for signing
-    #[account(
-        seeds = [b"escrow_authority", owner.key().as_ref()],
-        bump
-    )]
-    pub escrow_authority: UncheckedAccount<'info>,
+    /// The collection that this asset belongs to
+    /// CHECK: Read from stake account
+    pub collection: UncheckedAccount<'info>,
 
     /// The stake account
     #[account(
         mut,
         close = owner,
-        seeds = [StakeAccount::SEED_PREFIX, nft_mint.key().as_ref(), owner.key().as_ref()],
+        seeds = [StakeAccount::SEED_PREFIX, asset.key().as_ref(), owner.key().as_ref()],
         bump = stake_account.bump,
-        constraint = stake_account.nft_mint == nft_mint.key() @ StakingError::StakeAccountMismatch,
-        constraint = stake_account.is_active @ StakingError::StakeAccountMismatch
+        constraint = stake_account.nft_mint == asset.key() @ StakingError::StakeAccountMismatch,
+        constraint = stake_account.is_active @ StakingError::StakeAccountMismatch,
+        constraint = stake_account.nft_type == 2 @ StakingError::InvalidNftType
     )]
     pub stake_account: Account<'info, StakeAccount>,
 
@@ -73,15 +55,78 @@ pub struct UnstakeNft<'info> {
     )]
     pub config: Account<'info, GlobalConfig>,
 
-    pub token_program: Program<'info, Token>,
+    /// Freeze delegate PDA - current freeze authority
+    /// CHECK: PDA derived, must match the freeze delegate
+    #[account(
+        seeds = [b"freeze_delegate", owner.key().as_ref()],
+        bump
+    )]
+    pub freeze_delegate: UncheckedAccount<'info>,
+
+    /// MPL Core program
+    /// CHECK: Must match mpl-core program ID
+    pub mpl_core_program: UncheckedAccount<'info>,
+
+    pub system_program: Program<'info, System>,
+}
+
+/// Thaw a Core Asset using raw CPI
+fn thaw_core_asset<'info>(
+    asset: &AccountInfo<'info>,
+    collection: &AccountInfo<'info>,
+    payer: &AccountInfo<'info>,
+    freeze_delegate: &AccountInfo<'info>,
+    mpl_core_program: &AccountInfo<'info>,
+    signer_seeds: &[&[&[u8]]],
+) -> Result<()> {
+    // Verify program ID
+    require_keys_eq!(
+        *mpl_core_program.key,
+        MPL_CORE_PROGRAM_ID,
+        StakingError::InvalidDelegate
+    );
+
+    // MPL Core Thaw instruction discriminator (thaw_v1)
+    let discriminator: [u8; 8] = [131, 191, 15, 35, 143, 97, 234, 31];
+
+    let mut data = Vec::with_capacity(8);
+    data.extend_from_slice(&discriminator);
+
+    let accounts = vec![
+        AccountMeta::new(*asset.key, false),
+        AccountMeta::new_readonly(*collection.key, false),
+        AccountMeta::new(*payer.key, true),
+        AccountMeta::new_readonly(*freeze_delegate.key, true), // Authority must sign
+        AccountMeta::new_readonly(anchor_lang::system_program::ID, false),
+    ];
+
+    let ix = Instruction {
+        program_id: *mpl_core_program.key,
+        accounts,
+        data,
+    };
+
+    invoke_signed(
+        &ix,
+        &[
+            asset.clone(),
+            collection.clone(),
+            payer.clone(),
+            freeze_delegate.clone(),
+            mpl_core_program.clone(),
+        ],
+        signer_seeds,
+    )?;
+
+    Ok(())
 }
 
 pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
-    
+
     // VERIFY OWNER
     ctx.accounts.stake_account.verify_owner(&ctx.accounts.owner.key())?;
 
-    
+
     // CHECK LOCK PERIOD
     let clock = Clock::get()?;
     require!(
@@ -89,29 +134,26 @@ pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
         StakingError::StillLocked
     );
 
-    
-    // TRANSFER NFT BACK TO OWNER
-    let escrow_authority_bump = ctx.bumps.escrow_authority;
+
+    // THAW THE CORE ASSET (remove freeze)
     let owner_key = ctx.accounts.owner.key();
-    let escrow_authority_seeds: &[&[&[u8]]] = &[&[
-        b"escrow_authority",
+    let seeds = &[
+        b"freeze_delegate".as_ref(),
         owner_key.as_ref(),
-        &[escrow_authority_bump],
-    ]];
+        &[ctx.bumps.freeze_delegate],
+    ];
+    let signer_seeds = &[&seeds[..]];
 
-    let transfer_ctx = CpiContext::new_with_signer(
-        ctx.accounts.token_program.to_account_info(),
-        Transfer {
-            from: ctx.accounts.escrow_nft_account.to_account_info(),
-            to: ctx.accounts.owner_nft_account.to_account_info(),
-            authority: ctx.accounts.escrow_authority.to_account_info(),
-        },
-        escrow_authority_seeds,
-    );
+    thaw_core_asset(
+        &ctx.accounts.asset.to_account_info(),
+        &ctx.accounts.collection.to_account_info(),
+        &ctx.accounts.owner.to_account_info(),
+        &ctx.accounts.freeze_delegate.to_account_info(),
+        &ctx.accounts.mpl_core_program.to_account_info(),
+        signer_seeds,
+    )?;
 
-    token::transfer(transfer_ctx, 1)?;
 
-    
     // UPDATE STATS
     let collection_config = &mut ctx.accounts.collection_config;
     collection_config.total_staked = collection_config
@@ -125,7 +167,7 @@ pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
         .checked_sub(1)
         .ok_or(StakingError::ArithmeticOverflow)?;
 
-    
+
     // EMIT EVENT
     let total_staked_duration = ctx.accounts.stake_account.total_time_staked(clock.unix_timestamp);
 
@@ -137,9 +179,9 @@ pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
     });
 
     msg!("NFT unstaked successfully");
-    msg!("   NFT Mint: {}", ctx.accounts.stake_account.nft_mint);
-    msg!("   Total staked: {} days", total_staked_duration / 86400);
+    msg!("   Asset: {}", ctx.accounts.stake_account.nft_mint);
+    msg!("   Owner: {}", ctx.accounts.stake_account.owner);
+    msg!("   Total Staked: {} days", total_staked_duration / 86400);
 
-    // Stake account automatically closed (rent refunded to owner)
     Ok(())
 }
