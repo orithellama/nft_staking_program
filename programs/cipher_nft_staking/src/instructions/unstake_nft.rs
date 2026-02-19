@@ -97,7 +97,7 @@ fn thaw_core_asset<'info>(
 
     let accounts = vec![
         AccountMeta::new(*asset.key, false),
-        AccountMeta::new(*collection.key, false),
+        AccountMeta::new_readonly(*collection.key, false),
         AccountMeta::new(*payer.key, true),
         AccountMeta::new_readonly(*authority.key, true),
         AccountMeta::new_readonly(*system_program.key, false),
