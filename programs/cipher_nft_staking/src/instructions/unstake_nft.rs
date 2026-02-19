@@ -25,6 +25,7 @@ pub struct UnstakeNft<'info> {
 
     /// The collection that this asset belongs to
     /// CHECK: Read from stake account
+    #[account(mut)]
     pub collection: UncheckedAccount<'info>,
 
     /// The stake account
@@ -88,19 +89,24 @@ fn thaw_core_asset<'info>(
     );
 
     // RemovePluginV1 instruction discriminator
-    let discriminator: u8 = 5;
+    let discriminator: u8 = 4;
 
-    // Build instruction data: discriminator + plugin type variant (1 for FreezeDelegate)
+    // Build instruction data: discriminator + PluginType enum (u32 little-endian)
     let mut data = Vec::new();
     data.push(discriminator);
-    data.push(1); // PluginType::FreezeDelegate = 1
+    // PluginType::FreezeDelegate = 1 (u32 little-endian)
+    data.extend_from_slice(&1u32.to_le_bytes());
+
+    // SPL Noop program (log wrapper)
+    let spl_noop = anchor_lang::solana_program::sysvar::instructions::ID;
 
     let accounts = vec![
         AccountMeta::new(*asset.key, false),
-        AccountMeta::new_readonly(*collection.key, false),
+        AccountMeta::new(*collection.key, false), // Must be writable for MPL Core
         AccountMeta::new(*payer.key, true),
         AccountMeta::new_readonly(*authority.key, true),
         AccountMeta::new_readonly(*system_program.key, false),
+        AccountMeta::new_readonly(spl_noop, false), // Log wrapper
     ];
 
     let ix = Instruction {

@@ -27,6 +27,7 @@ pub struct StakeNft<'info> {
 
     /// The collection that this asset belongs to
     /// CHECK: Validated against whitelist
+    #[account(mut)]
     pub collection: UncheckedAccount<'info>,
 
     /// The stake account PDA (stores stake info)
@@ -97,23 +98,30 @@ fn freeze_core_asset<'info>(
     // AddPluginV1 instruction discriminator
     let discriminator: u8 = 2;
 
-    // Build instruction data: discriminator + plugin variant (1) + FreezeDelegate data
+    // Build instruction data: discriminator + Plugin enum + init_authority
     let mut data = Vec::new();
     data.push(discriminator);
 
-    // Plugin enum variant (FreezeDelegate = 1)
-    data.push(1);
+    // Plugin enum variant (FreezeDelegate = 1, u32 little-endian)
+    data.extend_from_slice(&1u32.to_le_bytes());
 
     // FreezeDelegate data (frozen = true)
     let freeze_data = FreezeDelegate { frozen: true };
     freeze_data.serialize(&mut data)?;
 
+    // init_authority: Option::None = 0
+    data.push(0);
+
+    // SPL Noop program (log wrapper)
+    let spl_noop = anchor_lang::solana_program::sysvar::instructions::ID;
+
     let accounts = vec![
         AccountMeta::new(*asset.key, false),
-        AccountMeta::new_readonly(*collection.key, false),
+        AccountMeta::new(*collection.key, false), // Must be writable for MPL Core
         AccountMeta::new(*payer.key, true),
         AccountMeta::new_readonly(*authority.key, true),
         AccountMeta::new_readonly(*system_program.key, false),
+        AccountMeta::new_readonly(spl_noop, false), // Log wrapper
     ];
 
     let ix = Instruction {
