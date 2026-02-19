@@ -70,13 +70,14 @@ pub struct UnstakeNft<'info> {
     pub system_program: Program<'info, System>,
 }
 
-/// Thaw a Core Asset using raw CPI
+/// Unlock a Core Asset by removing FreezeDelegate plugin
 fn thaw_core_asset<'info>(
     asset: &AccountInfo<'info>,
     collection: &AccountInfo<'info>,
     payer: &AccountInfo<'info>,
-    freeze_delegate: &AccountInfo<'info>,
+    authority: &AccountInfo<'info>,
     mpl_core_program: &AccountInfo<'info>,
+    system_program: &AccountInfo<'info>,
     signer_seeds: &[&[&[u8]]],
 ) -> Result<()> {
     // Verify program ID
@@ -86,18 +87,20 @@ fn thaw_core_asset<'info>(
         StakingError::InvalidDelegate
     );
 
-    // MPL Core Thaw instruction discriminator (thaw_v1)
-    let discriminator: [u8; 8] = [131, 191, 15, 35, 143, 97, 234, 31];
+    // RemovePluginV1 instruction discriminator
+    let discriminator: u8 = 5;
 
-    let mut data = Vec::with_capacity(8);
-    data.extend_from_slice(&discriminator);
+    // Build instruction data: discriminator + plugin type variant (1 for FreezeDelegate)
+    let mut data = Vec::new();
+    data.push(discriminator);
+    data.push(1); // PluginType::FreezeDelegate = 1
 
     let accounts = vec![
         AccountMeta::new(*asset.key, false),
-        AccountMeta::new_readonly(*collection.key, false),
+        AccountMeta::new(*collection.key, false),
         AccountMeta::new(*payer.key, true),
-        AccountMeta::new_readonly(*freeze_delegate.key, true), // Authority must sign
-        AccountMeta::new_readonly(anchor_lang::system_program::ID, false),
+        AccountMeta::new_readonly(*authority.key, true),
+        AccountMeta::new_readonly(*system_program.key, false),
     ];
 
     let ix = Instruction {
@@ -112,11 +115,14 @@ fn thaw_core_asset<'info>(
             asset.clone(),
             collection.clone(),
             payer.clone(),
-            freeze_delegate.clone(),
+            authority.clone(),
+            system_program.clone(),
             mpl_core_program.clone(),
         ],
         signer_seeds,
     )?;
+
+    msg!("FreezeDelegate plugin removed - NFT is UNLOCKED");
 
     Ok(())
 }
@@ -148,8 +154,9 @@ pub fn handler(ctx: Context<UnstakeNft>) -> Result<()> {
         &ctx.accounts.asset.to_account_info(),
         &ctx.accounts.collection.to_account_info(),
         &ctx.accounts.owner.to_account_info(),
-        &ctx.accounts.freeze_delegate.to_account_info(),
+        &ctx.accounts.owner.to_account_info(),
         &ctx.accounts.mpl_core_program.to_account_info(),
+        &ctx.accounts.system_program.to_account_info(),
         signer_seeds,
     )?;
 

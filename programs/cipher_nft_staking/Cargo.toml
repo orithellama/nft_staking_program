@@ -25,7 +25,9 @@ deprecated = "allow"
 anchor-lang = { version = "0.31.1", features = ["init-if-needed"] }
 anchor-spl = "0.31.1"
 mpl-token-metadata = { version = "5.1.1", features = ["serde"] }
+borsh = "0.10.3"
 
 # Compressed NFT & Core Asset support
-# All dependencies cause version conflicts, so using raw instructions only
+# Using raw instructions to avoid dependency conflicts
+# MPL Core uses plugin architecture - manual implementation
 # Anchor provides all necessary CPI primitives (invoke_signed, Instruction, AccountMeta)

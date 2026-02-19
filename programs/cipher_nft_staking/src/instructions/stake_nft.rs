@@ -1,8 +1,9 @@
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program::{
     instruction::{AccountMeta, Instruction},
-    program::invoke_signed,
+    program::invoke,
 };
+use borsh::{BorshSerialize, BorshDeserialize};
 
 use crate::state::*;
 use crate::events::*;
@@ -71,14 +72,20 @@ pub struct StakeNft<'info> {
     pub system_program: Program<'info, System>,
 }
 
-/// Freeze a Core Asset using raw CPI
+/// FreezeDelegate plugin data
+#[derive(BorshSerialize, BorshDeserialize)]
+struct FreezeDelegate {
+    frozen: bool,
+}
+
+/// Freeze a Core Asset by adding FreezeDelegate plugin
 fn freeze_core_asset<'info>(
     asset: &AccountInfo<'info>,
     collection: &AccountInfo<'info>,
     payer: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
-    freeze_delegate: &AccountInfo<'info>,
     mpl_core_program: &AccountInfo<'info>,
+    system_program: &AccountInfo<'info>,
 ) -> Result<()> {
     // Verify program ID
     require_keys_eq!(
@@ -87,19 +94,26 @@ fn freeze_core_asset<'info>(
         StakingError::InvalidDelegate
     );
 
-    // MPL Core Freeze instruction discriminator (freeze_v1)
-    let discriminator: [u8; 8] = [33, 145, 174, 98, 150, 138, 192, 181];
+    // AddPluginV1 instruction discriminator
+    let discriminator: u8 = 2;
 
-    let mut data = Vec::with_capacity(8);
-    data.extend_from_slice(&discriminator);
+    // Build instruction data: discriminator + plugin variant (1) + FreezeDelegate data
+    let mut data = Vec::new();
+    data.push(discriminator);
+
+    // Plugin enum variant (FreezeDelegate = 1)
+    data.push(1);
+
+    // FreezeDelegate data (frozen = true)
+    let freeze_data = FreezeDelegate { frozen: true };
+    freeze_data.serialize(&mut data)?;
 
     let accounts = vec![
         AccountMeta::new(*asset.key, false),
-        AccountMeta::new_readonly(*collection.key, false),
+        AccountMeta::new(*collection.key, false),
         AccountMeta::new(*payer.key, true),
-        AccountMeta::new(*authority.key, true),
-        AccountMeta::new_readonly(*freeze_delegate.key, false),
-        AccountMeta::new_readonly(anchor_lang::system_program::ID, false),
+        AccountMeta::new_readonly(*authority.key, true),
+        AccountMeta::new_readonly(*system_program.key, false),
     ];
 
     let ix = Instruction {
@@ -108,18 +122,19 @@ fn freeze_core_asset<'info>(
         data,
     };
 
-    invoke_signed(
+    invoke(
         &ix,
         &[
             asset.clone(),
             collection.clone(),
             payer.clone(),
             authority.clone(),
-            freeze_delegate.clone(),
+            system_program.clone(),
             mpl_core_program.clone(),
         ],
-        &[],
     )?;
+
+    msg!("FreezeDelegate plugin added - NFT is LOCKED");
 
     Ok(())
 }
@@ -142,8 +157,8 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         &ctx.accounts.collection.to_account_info(),
         &ctx.accounts.owner.to_account_info(),
         &ctx.accounts.owner.to_account_info(),
-        &ctx.accounts.freeze_delegate.to_account_info(),
         &ctx.accounts.mpl_core_program.to_account_info(),
+        &ctx.accounts.system_program.to_account_info(),
     )?;
 
 
