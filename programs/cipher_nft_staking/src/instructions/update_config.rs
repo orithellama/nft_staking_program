@@ -30,7 +30,13 @@ pub fn handler(
     let config = &mut ctx.accounts.config;
 
     // Update authority (ownership transfer)
+    // SECURITY (VULN-04 fix): reject zero/default pubkey — transferring to it would
+    // permanently brick the config with no recovery possible.
     if let Some(new_auth) = new_authority {
+        require!(
+            new_auth != Pubkey::default(),
+            StakingError::InvalidAuthority
+        );
         msg!("Authority transfer: {} -> {}", config.authority, new_auth);
         config.authority = new_auth;
     }

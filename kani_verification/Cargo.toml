@@ -1,13 +1,12 @@
 [package]
 name = "cipher-nft-staking-verification"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
+# All proofs are self-contained pure-Rust harnesses.
+# No Anchor/Solana runtime dependencies are needed —
+# removing them keeps Kani compilation fast and deterministic.
 [dependencies]
-# Import NFT staking program as library for verification
-cipher_nft_staking = { path = "../programs/cipher_nft_staking", features = ["no-entrypoint"] }
-anchor-lang = "0.31.1"
-anchor-spl = "0.31.1"
 
 [lib]
 name = "cipher_nft_staking_verification"

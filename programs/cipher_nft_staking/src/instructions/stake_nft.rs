@@ -12,6 +12,15 @@ use crate::error::*;
 /// Metaplex Core program ID
 const MPL_CORE_PROGRAM_ID: Pubkey = pubkey!("CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d");
 
+/// SPL Noop program ID — required by MPL Core as log wrapper
+const SPL_NOOP_PROGRAM_ID: Pubkey = pubkey!("noopb9bkMVfRPU8AsbpTUg8AQkHtKwMYZiFUjNRtMmV");
+
+/// FreezeDelegate plugin data
+#[derive(BorshSerialize, BorshDeserialize)]
+struct FreezeDelegate {
+    frozen: bool,
+}
+
 /// Stake an NFT by freezing it
 #[derive(Accounts)]
 #[instruction(lock_duration: i64)]
@@ -41,11 +50,14 @@ pub struct StakeNft<'info> {
     pub stake_account: Account<'info, StakeAccount>,
 
     /// The collection config (must be whitelisted)
+    /// SECURITY: constraint verifies the passed `collection` account key matches the
+    /// whitelisted collection stored in this config, preventing collection spoofing.
     #[account(
         mut,
         seeds = [CollectionConfig::SEED_PREFIX, collection_config.collection.as_ref()],
         bump = collection_config.bump,
-        constraint = collection_config.enabled @ StakingError::CollectionNotWhitelisted
+        constraint = collection_config.enabled @ StakingError::CollectionNotWhitelisted,
+        constraint = collection_config.collection == collection.key() @ StakingError::CollectionNotWhitelisted
     )]
     pub collection_config: Account<'info, CollectionConfig>,
 
@@ -70,13 +82,11 @@ pub struct StakeNft<'info> {
     /// CHECK: Must match mpl-core program ID
     pub mpl_core_program: UncheckedAccount<'info>,
 
-    pub system_program: Program<'info, System>,
-}
+    /// SPL Noop program (log wrapper) - required by MPL Core
+    /// CHECK: Must match noop program ID
+    pub log_wrapper: UncheckedAccount<'info>,
 
-/// FreezeDelegate plugin data
-#[derive(BorshSerialize, BorshDeserialize)]
-struct FreezeDelegate {
-    frozen: bool,
+    pub system_program: Program<'info, System>,
 }
 
 /// Freeze a Core Asset by adding FreezeDelegate plugin
@@ -85,35 +95,82 @@ fn freeze_core_asset<'info>(
     collection: &AccountInfo<'info>,
     payer: &AccountInfo<'info>,
     authority: &AccountInfo<'info>,
+    freeze_delegate: &AccountInfo<'info>,
     mpl_core_program: &AccountInfo<'info>,
+    log_wrapper: &AccountInfo<'info>,
     system_program: &AccountInfo<'info>,
 ) -> Result<()> {
-    // Verify program ID
+    // Verify program IDs (VULN-03: pin log_wrapper to SPL Noop)
     require_keys_eq!(
         *mpl_core_program.key,
         MPL_CORE_PROGRAM_ID,
         StakingError::InvalidDelegate
     );
+    require_keys_eq!(
+        *log_wrapper.key,
+        SPL_NOOP_PROGRAM_ID,
+        StakingError::InvalidDelegate
+    );
 
-    // AddPluginV1 instruction discriminator
+    // Remove any existing FreezeDelegate first
+    // Previous failed attempts may have left a FreezeDelegate on the NFT
+    // The owner can remove their own FreezeDelegate with their signature
+    let remove_disc: u8 = 4; // RemovePluginV1
+    let mut remove_data = Vec::new();
+    remove_data.push(remove_disc);
+    remove_data.push(1u8); // PluginType::FreezeDelegate
+
+    let remove_accounts = vec![
+        AccountMeta::new(*asset.key, false),
+        AccountMeta::new(*collection.key, false),
+        AccountMeta::new(*payer.key, true),
+        AccountMeta::new_readonly(*authority.key, true),
+        AccountMeta::new_readonly(*system_program.key, false),
+        AccountMeta::new_readonly(*log_wrapper.key, false),
+    ];
+
+    let remove_ix = Instruction {
+        program_id: *mpl_core_program.key,
+        accounts: remove_accounts,
+        data: remove_data,
+    };
+
+    // Attempt removal, ignoring errors if plugin doesn't exist
+    let _ = invoke(
+        &remove_ix,
+        &[
+            asset.clone(),
+            collection.clone(),
+            payer.clone(),
+            authority.clone(),
+            system_program.clone(),
+            log_wrapper.clone(),
+            mpl_core_program.clone(),
+        ],
+    );
+
+    // INFO-02: Instruction bytes are hand-encoded against MPL Core v1 layout.
+    // discriminator=2 (AddPluginV1), plugin variant=1 (FreezeDelegate), authority variant=3 (Address).
+    // Re-validate these byte offsets when upgrading mpl-core or anchor-mpl-core versions.
+    // Now add the FreezeDelegate
     let discriminator: u8 = 2;
 
-    // Build instruction data: discriminator + Plugin enum + init_authority
+    // Build instruction data: discriminator + Plugin enum + plugin data + init_authority
     let mut data = Vec::new();
     data.push(discriminator);
 
-    // Plugin enum variant (FreezeDelegate = 1, u32 little-endian)
-    data.extend_from_slice(&1u32.to_le_bytes());
+    // Plugin enum variant (FreezeDelegate = 1, u8 NOT u32!)
+    data.push(1u8);
 
     // FreezeDelegate data (frozen = true)
     let freeze_data = FreezeDelegate { frozen: true };
     freeze_data.serialize(&mut data)?;
 
-    // init_authority: Option::None = 0
-    data.push(0);
-
-    // SPL Noop program (log wrapper)
-    let spl_noop = anchor_lang::solana_program::sysvar::instructions::ID;
+    // init_authority: Some(PluginAuthority::Address(freeze_delegate))
+    // This makes ONLY the PDA able to remove the FreezeDelegate
+    data.push(1); // Option::Some
+    data.push(3); // PluginAuthority::Address variant
+    data.extend_from_slice(freeze_delegate.key.as_ref()); // PDA pubkey (32 bytes)
 
     let accounts = vec![
         AccountMeta::new(*asset.key, false),
@@ -121,7 +178,7 @@ fn freeze_core_asset<'info>(
         AccountMeta::new(*payer.key, true),
         AccountMeta::new_readonly(*authority.key, true),
         AccountMeta::new_readonly(*system_program.key, false),
-        AccountMeta::new_readonly(spl_noop, false), // Log wrapper
+        AccountMeta::new_readonly(*log_wrapper.key, false), // Required by MPL Core
     ];
 
     let ix = Instruction {
@@ -138,6 +195,7 @@ fn freeze_core_asset<'info>(
             payer.clone(),
             authority.clone(),
             system_program.clone(),
+            log_wrapper.clone(),
             mpl_core_program.clone(),
         ],
     )?;
@@ -165,7 +223,9 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
         &ctx.accounts.collection.to_account_info(),
         &ctx.accounts.owner.to_account_info(),
         &ctx.accounts.owner.to_account_info(),
+        &ctx.accounts.freeze_delegate.to_account_info(),
         &ctx.accounts.mpl_core_program.to_account_info(),
+        &ctx.accounts.log_wrapper.to_account_info(),
         &ctx.accounts.system_program.to_account_info(),
     )?;
 
@@ -191,6 +251,11 @@ pub fn handler(ctx: Context<StakeNft>, lock_duration: i64, associated_pool: Opti
     stake_account.leaf_index = 0; // Not used for Core Assets
     stake_account._padding = [0; 135];
 
+
+    // VULN-06 NOTE: protocol_fee_bps is stored in GlobalConfig but not collected here.
+    // Fee enforcement is delegated to the Orbit Finance DLMM layer which reads
+    // config.protocol_fee_bps off-chain and on-chain before distributing rewards.
+    // No SOL/token transfer occurs in this instruction.
 
     // UPDATE STATS
     let collection_config = &mut ctx.accounts.collection_config;

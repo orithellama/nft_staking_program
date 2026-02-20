@@ -30,4 +30,3 @@ borsh = "0.10.3"
 # Compressed NFT & Core Asset support
 # Using raw instructions to avoid dependency conflicts
 # MPL Core uses plugin architecture - manual implementation
-# Anchor provides all necessary CPI primitives (invoke_signed, Instruction, AccountMeta)
