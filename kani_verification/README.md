@@ -1,6 +1,6 @@
-# Cipher NFT Staking - Kani Verification Suite
+# balddev NFT Staking - Kani Verification Suite
 
-Standalone Kani harness crate for `cipher_nft_staking`.
+Standalone Kani harness crate for `balddev_nft_staking`.
 
 ## Quick Start
 ```bash

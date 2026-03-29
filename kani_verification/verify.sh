@@ -1,5 +1,5 @@
 #!/bin/bash
-# Cipher NFT Staking - Kani Verification Runner
+# balddev NFT Staking - Kani Verification Runner
 
 set -euo pipefail
 
@@ -19,7 +19,7 @@ proof_count() {
 }
 
 echo -e "${GREEN}================================================================${NC}"
-echo -e "${GREEN}   Cipher NFT Staking - Formal Verification Suite${NC}"
+echo -e "${GREEN}   balddev NFT Staking - Formal Verification Suite${NC}"
 echo -e "${GREEN}================================================================${NC}"
 echo ""
 

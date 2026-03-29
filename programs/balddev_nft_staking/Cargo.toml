@@ -1,12 +1,12 @@
 [package]
-name = "cipher_nft_staking"
+name = "balddev_nft_staking"
 version = "0.1.0"
-description = "Secure NFT staking program for Cipher/Orbit Finance ecosystem"
+description = "Secure NFT staking program for balddev ecosystem"
 edition = "2021"
 
 [lib]
 crate-type = ["cdylib", "lib"]
-name = "cipher_nft_staking"
+name = "balddev_nft_staking"
 
 [features]
 no-entrypoint = []

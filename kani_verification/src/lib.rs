@@ -1,4 +1,4 @@
-// Cipher NFT Staking - Kani Verification Harness Library
+// balddev NFT Staking - Kani Verification Harness Library
 //
 // All proofs are self-contained pure-Rust logic harnesses.
 // No Anchor/Solana runtime types are imported here to keep

@@ -1,6 +1,6 @@
-# Cipher NFT Staking Program
+# balddev NFT Staking Program
 
-A secure, simple NFT staking program built on Solana for the Cipher/Orbit Finance ecosystem.
+A secure, simple NFT staking program built on Solana for the balddev ecosystem.
 
 ## Overview
 
@@ -331,4 +331,4 @@ See SECURITY.txt for security considerations and audit status.
 
 ## Contributing
 
-This is a production program for the Cipher/Orbit Finance ecosystem. External contributions are not currently accepted but requests can be send to info@cipherlabsx.com.
+This is a production program for the balddev ecosystem. External contributions are not currently accepted; contact https://x.com/balddev.

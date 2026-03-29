@@ -6,7 +6,7 @@ use crate::events::*;
 ///
 /// **Security:**
 /// - Can only be called once (account init prevents re-initialization)
-/// - Authority is set to Cipherlabs Squads v4 multisig
+/// - Authority is set to balddev Squads v4 multisig
 /// - Starts in unpaused state
 #[derive(Accounts)]
 pub struct InitializeConfig<'info> {

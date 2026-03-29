@@ -1,4 +1,4 @@
-// Cipher NFT Staking — Kani Formal Verification Proofs
+// balddev NFT Staking — Kani Formal Verification Proofs
 //
 // Each proof is sourced directly from the program code it models.
 // File references point to the exact lines being verified.

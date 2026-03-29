@@ -2,7 +2,7 @@
 
 ## Program Overview
 
-The Cipher NFT Staking Program is a security-critical smart contract that holds user NFTs in escrow. This document outlines the security model, known considerations, and responsible disclosure procedures.
+The balddev NFT Staking Program is a security-critical smart contract that holds user NFTs in escrow. This document outlines the security model, known considerations, and responsible disclosure procedures.
 
 ## Audit Status
 
@@ -113,7 +113,7 @@ If you discover a security vulnerability in this program:
 3. **DO** contact the development team immediately
 
 **Contact:**
-- Email: security@cipherlabsx.com
+- X: https://x.com/balddev
 
 **Expected Response Time:**
 - Critical vulnerabilities: < 1 hours

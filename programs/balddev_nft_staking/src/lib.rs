@@ -9,9 +9,9 @@ use instructions::*;
 
 declare_id!("7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV");
 
-/// # Cipher NFT Staking Program
+/// # balddev NFT Staking Program
 ///
-/// Secure NFT staking program for the Cipher/Orbit Finance ecosystem.
+/// Secure NFT staking program for the balddev ecosystem.
 ///
 /// ## Features
 /// - NFT escrow via PDA (cannot be moved during lock)
@@ -49,7 +49,7 @@ declare_id!("7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV");
 /// 5. User:  unstake_nft() -> NFT returned, stake_account closed
 /// ```
 #[program]
-pub mod cipher_nft_staking {
+pub mod balddev_nft_staking {
     use super::*;
 
     /// Initialize the global config (call once)

@@ -1,5 +1,5 @@
 # ===========================================
-# Makefile - Cipher NFT Staking
+# Makefile - balddev NFT Staking
 # ===========================================
 
 SHELL                := /usr/bin/env bash
@@ -15,7 +15,7 @@ CARGO                ?= cargo
 VALIDATOR            ?= solana-test-validator
 
 # Project
-PROGRAM_NAME         ?= cipher_nft_staking
+PROGRAM_NAME         ?= balddev_nft_staking
 PROGRAM_DIR          ?= programs/$(PROGRAM_NAME)
 PROGRAM_KEYPAIR      ?= target/deploy/$(PROGRAM_NAME)-keypair.json
 IDL_JSON             ?= target/idl/$(PROGRAM_NAME).json
@@ -41,7 +41,7 @@ CLUSTER              ?= Localnet
 
 # Mainnet config
 MAINNET_URL          ?= https://api.mainnet-beta.solana.com
-PROGRAM_ID           ?= CiPherNFTStake11111111111111111111111111111
+PROGRAM_ID           ?= NftStake11111111111111111111111111111111111
 
 # Optional .env
 ifneq (,$(wildcard .env))
@@ -58,7 +58,7 @@ C_ERR    := \033[1;31m
 
 .PHONY: help
 help:
-	printf "$(C_INFO)Cipher NFT Staking — available commands$(C_RESET)\n"
+	printf "$(C_INFO)balddev NFT Staking — available commands$(C_RESET)\n"
 	awk 'BEGIN {FS = ":.*##"} /^[a-zA-Z0-9_\-]+:.*##/ {printf "  \033[1;36m%-22s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .PHONY: doctor

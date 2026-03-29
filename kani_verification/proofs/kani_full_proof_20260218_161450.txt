@@ -3,7 +3,7 @@ Kani Rust Verifier 0.67.0 (cargo plugin)
 Checking harness stake_proofs::prove_lock_duration_validation...
 CBMC 6.8.0 (cbmc-6.8.0)
 CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
-Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs30prove_lock_duration_validation.out
+Reading GOTO program from file /Users/llama/codespaces/balddev_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/balddev_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31balddev_nft_staking_verification12stake_proofs30prove_lock_duration_validation.out
 Generating GOTO Program
 Adding CPROVER library (arm64)
 Removal of function pointers and virtual functions
@@ -71,7 +71,7 @@ Verification Time: 0.015610375s
 Checking harness stake_proofs::prove_time_until_unlock_correct...
 CBMC 6.8.0 (cbmc-6.8.0)
 CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
-Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs31prove_time_until_unlock_correct.out
+Reading GOTO program from file /Users/llama/codespaces/balddev_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/balddev_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31balddev_nft_staking_verification12stake_proofs31prove_time_until_unlock_correct.out
 Generating GOTO Program
 Adding CPROVER library (arm64)
 Removal of function pointers and virtual functions
@@ -143,7 +143,7 @@ Verification Time: 0.020682666s
 Checking harness stake_proofs::prove_stats_tracking_safe...
 CBMC 6.8.0 (cbmc-6.8.0)
 CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
-Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs25prove_stats_tracking_safe.out
+Reading GOTO program from file /Users/llama/codespaces/balddev_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/balddev_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31balddev_nft_staking_verification12stake_proofs25prove_stats_tracking_safe.out
 Generating GOTO Program
 Adding CPROVER library (arm64)
 Removal of function pointers and virtual functions
@@ -210,7 +210,7 @@ Verification Time: 0.020217668s
 Checking harness stake_proofs::prove_owner_verification...
 CBMC 6.8.0 (cbmc-6.8.0)
 CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
-Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs24prove_owner_verification.out
+Reading GOTO program from file /Users/llama/codespaces/balddev_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/balddev_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31balddev_nft_staking_verification12stake_proofs24prove_owner_verification.out
 Generating GOTO Program
 Adding CPROVER library (arm64)
 Removal of function pointers and virtual functions
@@ -267,7 +267,7 @@ Verification Time: 0.010211292s
 Checking harness stake_proofs::prove_arithmetic_safety...
 CBMC 6.8.0 (cbmc-6.8.0)
 CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
-Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs23prove_arithmetic_safety.out
+Reading GOTO program from file /Users/llama/codespaces/balddev_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/balddev_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31balddev_nft_staking_verification12stake_proofs23prove_arithmetic_safety.out
 Generating GOTO Program
 Adding CPROVER library (arm64)
 Removal of function pointers and virtual functions
@@ -329,7 +329,7 @@ Verification Time: 0.032594915s
 Checking harness stake_proofs::prove_lock_enforcement...
 CBMC 6.8.0 (cbmc-6.8.0)
 CBMC version 6.8.0 (cbmc-6.8.0) 64-bit arm64 macos
-Reading GOTO program from file /Users/llama/codespaces/cipher_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/cipher_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31cipher_nft_staking_verification12stake_proofs22prove_lock_enforcement.out
+Reading GOTO program from file /Users/llama/codespaces/balddev_nft_staking/kani_verification/target/kani/aarch64-apple-darwin/debug/deps/balddev_nft_staking_verification-ba47d1136a72a3f7__RNvNtCs3VbUcEIS7fq_31balddev_nft_staking_verification12stake_proofs22prove_lock_enforcement.out
 Generating GOTO Program
 Adding CPROVER library (arm64)
 Removal of function pointers and virtual functions
