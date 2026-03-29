@@ -1,248 +1,186 @@
-# balddev NFT Staking Program
+# NFT Staking Program
 
-A secure, simple NFT staking program built on Solana for the balddev ecosystem.
+A secure NFT staking program on Solana (Anchor) that locks NFTs in escrow PDAs for a fixed period. Other on-chain or off-chain systems can read stake state to gate access to benefits such as fee claims.
 
-## Overview
-
-This program enables users to stake their NFTs by locking them in escrow PDAs for a specified duration. During the lock period, the NFT cannot be moved, providing a verifiable on-chain proof that the user has committed to the ecosystem. This staking status can be read by other programs (like DLMM) to determine eligibility for fee claims or other benefits.
-
-**Key Design Principle**: Simple binary lock/unlock system, no complex multipliers or reward calculations. The program tracks whether an NFT is locked and when it unlocks, nothing more.
+This program can be integrated with Balddev DEX.
 
 ## Program ID
 
-```
+```text
 7dMir6E96FwiYQQ9mdsL6AKUmgzzrERwqj7mkhthxQgV
 ```
 
+## Overview
+
+The program uses a binary lock model:
+- NFT is either actively staked (locked) or unstaked (unlocked)
+- No reward multipliers or complex reward math inside this program
+- External systems decide how stake status affects eligibility or incentives
+
 ## Features
 
-- **NFT Escrow via PDA**: NFTs are held in per-user escrow PDAs and cannot be moved until the lock period expires
-- **Collection Whitelisting**: Only admin-approved NFT collections can be staked
-- **Configurable Lock Durations**: Each collection can have min/max lock period requirements
-- **Emergency Pause**: Admin can pause staking in case of emergencies (does not affect existing stakes)
-- **No Admin Backdoors**: Authority cannot access or withdraw user NFTs
-- **Per-User Escrow Authority**: Each user has their own escrow authority PDA, eliminating any collision risks
-- **Full Event Emission**: All actions emit events for easy off-chain indexing
+- NFT escrow via per-user PDA authority
+- Collection-level allowlisting and enable/disable controls
+- Configurable min/max lock durations per collection
+- Emergency pause for staking operations
+- No admin withdrawal path for user NFTs
+- Event emission for indexing and analytics
+- Support for traditional and compressed NFT tracking fields
 
 ## Program Instructions
 
-### Admin Instructions
+### 1. `initialize_config`
+Initializes global config. Callable once.
 
-#### 1. `initialize_config`
-Initialize the global configuration. Must be called once before any other instruction.
+Parameters:
+- `protocol_fee_bps` (`u16`) - protocol fee in bps (max 1000 = 10%)
 
-**Parameters:**
-- `protocol_fee_bps` (u16) - Optional protocol fee in basis points (max 1000 = 10%)
+Access:
+- First successful caller initializes config authority
 
-**Access:** Anyone (first call initializes, subsequent calls fail)
+### 2. `update_config`
+Updates global config.
 
-#### 2. `update_config`
-Update global configuration settings.
+Parameters:
+- `new_authority` (`Option<Pubkey>`) - transfer authority
+- `paused` (`Option<bool>`) - pause/unpause staking ops
+- `protocol_fee_bps` (`Option<u16>`) - update fee bps
 
-**Parameters:**
-- `new_authority` (Option<Pubkey>) - Transfer authority to new address
-- `paused` (Option<bool>) - Pause/unpause staking operations
-- `protocol_fee_bps` (Option<u16>) - Update protocol fee
+Access:
+- Current authority only
 
-**Access:** Current authority only
+### 3. `add_collection`
+Adds or updates config for a verified NFT collection.
 
-#### 3. `add_collection`
-Add or update a collection's staking configuration.
+Parameters:
+- `collection` (`Pubkey`) - verified collection address
+- `min_lock_duration` (`i64`) - minimum lock (seconds)
+- `max_lock_duration` (`i64`) - maximum lock (seconds)
+- `enabled` (`bool`) - staking enabled for this collection
 
-**Parameters:**
-- `collection` (Pubkey) - The NFT collection's verified collection address
-- `min_lock_duration` (i64) - Minimum lock time in seconds
-- `max_lock_duration` (i64) - Maximum lock time in seconds
-- `enabled` (bool) - Whether staking is enabled for this collection
+Access:
+- Authority only
 
-**Access:** Authority only
+### 4. `stake_nft`
+Locks a user NFT in escrow and creates stake state.
 
-**Example:**
-```rust
-// Enable staking for a collection with 7-30 day lock periods
-add_collection(
-    collection: collection_mint,
-    min_lock_duration: 604800,  // 7 days
-    max_lock_duration: 2592000, // 30 days
-    enabled: true
-)
-```
+Parameters:
+- `lock_duration` (`i64`) - lock period in seconds
+- `associated_pool` (`Option<Pubkey>`) - optional pool/market reference for downstream integrations
 
-### User Instructions
+Requirements:
+- Signer owns the NFT
+- Collection is allowlisted and enabled
+- Lock duration is within collection bounds
+- NFT metadata verification passes
 
-#### 4. `stake_nft`
-Stake an NFT by locking it in escrow.
+### 5. `unstake_nft`
+Unlocks and returns NFT after lock expiry.
 
-**Parameters:**
-- `lock_duration` (i64) - How long to lock the NFT (seconds)
-- `associated_pool` (Option<Pubkey>) - Optional pool address for targeted benefits
+Requirements:
+- Signer matches stake owner
+- Current timestamp is at or after `unlock_at`
 
-**Requirements:**
-- User must own the NFT
-- NFT must be from a whitelisted and enabled collection
-- Lock duration must be within collection's min/max range
-- NFT must have verified collection metadata
+## Account Model
 
-**What Happens:**
-1. Verifies NFT ownership and collection
-2. Transfers NFT to escrow PDA (user loses custody)
-3. Creates stake account with lock details
-4. Emits `NftStaked` event
+### `GlobalConfig` (190 bytes)
 
-#### 5. `unstake_nft`
-Unstake an NFT after the lock period expires.
-
-**Requirements:**
-- User must own the stake account
-- Current time must be >= unlock_at timestamp
-
-**What Happens:**
-1. Verifies lock period has expired
-2. Transfers NFT back to user
-3. Closes stake account (refunds rent to user)
-4. Emits `NftUnstaked` event
-
-#### 6. `claim_rewards`
-Track rewards claimed by a user (metadata only).
-
-**Parameters:**
-- `amount` (u64) - Amount of rewards to mark as claimed
-
-**Note:** This is a tracking function only. Actual token distribution must be handled off-chain by your adapter after reading the event.
-
-## Account Structures
-
-### GlobalConfig (190 bytes)
 ```rust
 {
-    authority: Pubkey,        // Admin who can update config
-    paused: bool,             // Emergency pause flag
-    protocol_fee_bps: u16,    // Optional protocol fee
-    total_stakes: u64,        // Total active stakes
-    collection_count: u64,    // Number of whitelisted collections
-    bump: u8
+    authority: Pubkey,
+    paused: bool,
+    bump: u8,
+    _reserved: [u8; 6],
+    total_stakes: u64,
+    collection_count: u32,
+    protocol_fee_bps: u16,
+    _padding: [u8; 128]
 }
 ```
 
-**PDA Seeds:** `["config"]`
+PDA seeds:
+- `["config"]`
 
-### CollectionConfig (210 bytes)
+### `CollectionConfig` (210 bytes)
+
 ```rust
 {
-    collection: Pubkey,       // NFT collection address
-    enabled: bool,            // Whether staking is enabled
-    min_lock_duration: i64,   // Min lock time in seconds
-    max_lock_duration: i64,   // Max lock time in seconds
-    total_staked: u64,        // Current stakes from this collection
-    lifetime_stakes: u64,     // All-time stakes from this collection
-    bump: u8
+    collection: Pubkey,
+    enabled: bool,
+    bump: u8,
+    min_lock_duration: i64,
+    max_lock_duration: i64,
+    _reserved: [u8; 8],
+    total_staked: u64,
+    lifetime_stakes: u64,
+    _padding: [u8; 128]
 }
 ```
 
-**PDA Seeds:** `["collection", collection_pubkey]`
+PDA seeds:
+- `["collection", collection_pubkey]`
 
-### StakeAccount (312 bytes)
+### `StakeAccount` (312 bytes)
+
 ```rust
 {
-    owner: Pubkey,            // Who staked the NFT
-    nft_mint: Pubkey,         // The staked NFT's mint
-    collection: Pubkey,       // Verified collection
-    staked_at: i64,           // Unix timestamp of stake
-    unlock_at: i64,           // When NFT can be unstaked
-    lock_duration: i64,       // Lock period in seconds
-    is_active: bool,          // Whether stake is active
-    rewards_claimed: u64,     // Total rewards claimed
-    last_claim_at: i64,       // Last claim timestamp
-    associated_pool: Pubkey,  // Optional pool association
-    bump: u8
+    owner: Pubkey,
+    nft_mint: Pubkey,
+    collection: Pubkey,
+    staked_at: i64,
+    unlock_at: i64,
+    lock_duration: i64,
+    bump: u8,
+    is_active: bool,
+    _reserved: [u8; 6],
+    associated_pool: Pubkey,
+    nft_type: u8,
+    leaf_index: u64,
+    _padding: [u8; 135]
 }
 ```
 
-**PDA Seeds:** `["stake", nft_mint, owner]`
+PDA seeds:
+- `["stake", nft_mint, owner]`
 
-### Escrow Authority (No data)
-Per-user PDA that owns the escrow token account.
+### Escrow Authority PDA
 
-**PDA Seeds:** `["escrow_authority", owner]`
+Per-user authority PDA that owns the escrow token account.
 
-## Integration with DLMM
+PDA seeds:
+- `["escrow_authority", owner]`
 
-This program is designed to integrate with the Orbit Finance DLMM (Dynamic Liquidity Market Maker) program to gate fee claims:
+## Balddev DEX Integration
+
+This staking program can be integrated into Balddev DEX by checking whether a user has an active, still-locked stake.
+
+Example check logic:
 
 ```rust
-// In DLMM program:
 let stake_account = StakeAccount::try_deserialize(&stake_account_data)?;
-
-// Check if user has active stake
 let is_staked = stake_account.is_active && !stake_account.is_unlocked(current_time);
 
 if is_staked {
-    // User is eligible for fee claims
-    distribute_fees(&user);
+    // eligible in Balddev DEX
 } else {
-    // User must stake NFT first
-    return Err(ErrorCode::NoActiveStake);
+    // staking requirement not met
 }
 ```
 
-### Integration Options
+Integration patterns:
 
-**Option 1: On-Chain Reading**
-- DLMM program reads StakeAccount directly during fee claim transactions
-- Pro: Always current, no sync issues
-- Con: Adds compute units and account requirements
+1. On-chain check
+- Balddev DEX instruction reads `StakeAccount` directly
+- Highest consistency, higher compute/account overhead
 
-**Option 2: Database Tracking (Recommended)**
-- Index NftStaked/NftUnstaked events off-chain
-- Store stake status in database
-- DLMM adapter checks database before distributing fees
-- Pro: Lower cost, more flexible
-- Con: Requires event indexer
-
-## Security Features
-
-### NFT Protection
-- NFTs are held in Associated Token Accounts owned by per-user escrow authority PDAs
-- Escrow authority has no private key - only the program can sign for it
-- Each user has unique escrow authority: `["escrow_authority", user_pubkey]`
-- Eliminates any theoretical collision scenarios between users
-
-### Access Control
-- All owner operations verify signer matches stake account owner
-- Collection operations restricted to authority only
-- Pause functionality for emergencies
-
-### Validation
-- Metadata verification ensures NFT is from claimed collection
-- Token standard check prevents staking fungible tokens
-- Lock duration validation enforces collection rules
-- Double-stake prevention via explicit checks
-
-### Checked Arithmetic
-- All math operations use checked arithmetic to prevent overflows
-- Stats updates safely handle edge cases
-
-## Error Codes
-
-```rust
-InvalidAuthority          // Signer is not the authority
-InvalidNftOwner          // Signer does not own the NFT
-InvalidMetadata          // NFT metadata is invalid or missing
-CollectionNotWhitelisted // Collection is not approved for staking
-InvalidLockDuration      // Lock duration outside allowed range
-StillLocked              // Attempted unstake before unlock time
-ProgramPaused            // Staking operations are paused
-InvalidTokenAccount      // Token account validation failed
-ArithmeticOverflow       // Math operation would overflow
-MetadataVerificationFailed // Collection not verified in metadata
-StakeAlreadyExists       // Stake account already exists for this NFT
-StakeAccountMismatch     // Stake account data doesn't match expected values
-InvalidMultiplier        // [Unused in simplified version]
-```
+2. Off-chain indexer check
+- Index `NftStaked` and `NftUnstaked` events
+- Maintain stake status in a database/cache
+- Lower on-chain cost, requires reliable indexer infra
 
 ## Events
 
-### NftStaked
+### `NftStaked`
 ```rust
 {
     staker: Pubkey,
@@ -255,28 +193,17 @@ InvalidMultiplier        // [Unused in simplified version]
 }
 ```
 
-### NftUnstaked
+### `NftUnstaked`
 ```rust
 {
     staker: Pubkey,
     nft_mint: Pubkey,
     unstaked_at: i64,
-    total_staked_duration: i64,
-    rewards_earned: u64
+    total_staked_duration: i64
 }
 ```
 
-### RewardsClaimed
-```rust
-{
-    staker: Pubkey,
-    nft_mint: Pubkey,
-    amount: u64,
-    claimed_at: i64
-}
-```
-
-### CollectionWhitelisted
+### `CollectionWhitelisted`
 ```rust
 {
     collection: Pubkey,
@@ -286,7 +213,7 @@ InvalidMultiplier        // [Unused in simplified version]
 }
 ```
 
-### ConfigUpdated
+### `ConfigUpdated`
 ```rust
 {
     authority: Pubkey,
@@ -295,40 +222,51 @@ InvalidMultiplier        // [Unused in simplified version]
 }
 ```
 
-## Building
+## Error Codes
+
+```rust
+CollectionNotWhitelisted
+StillLocked
+InvalidLockDuration
+InvalidNftOwner
+InvalidMetadata
+StakeAccountMismatch
+InvalidAuthority
+CollectionConfigNotFound
+ArithmeticOverflow
+InvalidMultiplier
+StakeAlreadyExists
+ProgramPaused
+InvalidTokenAccount
+MetadataVerificationFailed
+InvalidNftType
+InvalidMerkleProof
+CompressedNftVerificationFailed
+InvalidDelegate
+InvalidMerkleTree
+```
+
+## Build and Test
 
 ```bash
-# Install dependencies
 anchor build
-
-# Run tests
 anchor test
+```
 
-# Deploy to devnet
+Deploy:
+
+```bash
+# devnet
 anchor deploy --provider.cluster devnet
 
-# Deploy to mainnet
+# mainnet
 anchor deploy --provider.cluster mainnet
 ```
 
-## Testing
+## Security
 
-The program includes comprehensive tests covering:
-- Initialization and configuration
-- Collection management
-- NFT staking and unstaking
-- Lock period enforcement
-- Access control
-- Error conditions
+See `SECURITY.txt` for threat model, assumptions, and operational guidance.
 
 ## License
 
-See LICENSE file for details.
-
-## Security
-
-See SECURITY.txt for security considerations and audit status.
-
-## Contributing
-
-This is a production program for the balddev ecosystem. External contributions are not currently accepted; contact https://x.com/balddev.
+See `LICENSE`.
